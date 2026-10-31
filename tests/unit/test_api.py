@@ -4,8 +4,7 @@ from __future__ import annotations
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlmodel import Session, SQLModel, create_engine
-from sqlmodel.pool import StaticPool
+from sqlmodel import SQLModel
 
 from modelgate.api.main import app, engine
 
@@ -87,7 +86,11 @@ def test_run_approval_flow(client: TestClient) -> None:
     # Approve with comment
     approve_resp = client.post(
         f"/runs/{run_id}/approve",
-        json={"reviewer": "reviewer1", "decision": "approve", "comment": "Approved after reviewing slice metrics"},
+        json={
+            "reviewer": "reviewer1",
+            "decision": "approve",
+            "comment": "Approved after reviewing slice metrics",
+        },
     )
     assert approve_resp.status_code == 200
     assert approve_resp.json()["decision"] == "approve"
@@ -99,6 +102,8 @@ def test_settings_endpoints(client: TestClient) -> None:
     assert get_resp.status_code == 200
 
     # Update settings
-    update_resp = client.put("/settings", json={"config": {"checks": {"budgets": {"p95_latency_ms": 75.0}}}})
+    update_resp = client.put(
+        "/settings", json={"config": {"checks": {"budgets": {"p95_latency_ms": 75.0}}}}
+    )
     assert update_resp.status_code == 200
     assert update_resp.json()["status"] == "saved"

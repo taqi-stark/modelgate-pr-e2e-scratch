@@ -11,10 +11,10 @@ from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import Body, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from sqlmodel import Session, SQLModel, create_engine, select
+from sqlmodel import Session, SQLModel, col, create_engine, select
 
 from modelgate.api.models import Approval, CheckResultRecord, Run, Settings
 
@@ -104,7 +104,7 @@ def create_run(req: RunCreateRequest) -> dict:
         session.add(run)
         session.commit()
         session.refresh(run)
-        run_id = run.id
+        run_id = int(run.id or 0)
 
         # Save individual check results
         for cr in verdict.get("check_results", []):
@@ -133,7 +133,7 @@ def list_runs(
 ) -> list[dict]:
     """List runs with optional filters."""
     with Session(engine) as session:
-        query = select(Run).order_by(Run.id.desc())
+        query = select(Run).order_by(col(Run.id).desc())
 
         if status:
             query = query.where(Run.status == status)
@@ -350,7 +350,7 @@ def list_models(
 ) -> list[dict]:
     """Registry view with champion marked."""
     with Session(engine) as session:
-        query = select(Run).where(Run.status.in_(["pass", "warn"])).order_by(Run.id.desc())
+        query = select(Run).where(col(Run.status).in_(["pass", "warn"])).order_by(col(Run.id).desc())
         if project:
             query = query.where(Run.project == project)
         runs = session.exec(query.limit(50)).all()
@@ -386,7 +386,7 @@ def get_settings(project: str = Query("default")) -> dict:
 
 
 @app.put("/settings")
-def update_settings(project: str = Query("default"), req: SettingsUpdateRequest = ...) -> dict:
+def update_settings(project: str = Query("default"), req: SettingsUpdateRequest = Body(...)) -> dict:
     """Update settings."""
     with Session(engine) as session:
         settings = session.exec(select(Settings).where(Settings.project == project)).first()

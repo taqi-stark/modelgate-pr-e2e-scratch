@@ -8,7 +8,7 @@ Applies Holm-Bonferroni correction across slices.
 from __future__ import annotations
 
 import time
-from typing import Any
+from typing import Any, Literal
 
 import numpy as np
 import pandas as pd
@@ -18,7 +18,7 @@ from modelgate.config import SliceConfig
 from modelgate.stats import holm_bonferroni, paired_bootstrap_ci
 from modelgate.verdict import CheckResult
 
-METRIC_FUNCTIONS: dict[str, callable] = {
+METRIC_FUNCTIONS: dict[str, Any] = {
     "f1": lambda y, p: f1_score(y, p, average="weighted", zero_division=0),
     "accuracy": accuracy_score,
     "precision": lambda y, p: precision_score(y, p, average="weighted", zero_division=0),
@@ -181,6 +181,7 @@ def run_slices_check(
 
     duration = time.time() - start
 
+    status: Literal["pass", "warn", "fail", "skip"]
     if has_fail:
         status = "fail"
         summary = "; ".join(failing_slices[:3])

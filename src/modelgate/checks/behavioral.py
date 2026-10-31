@@ -30,7 +30,7 @@ def _perturb_shuffle(series: pd.Series, seed: int = 42) -> pd.Series:
     return pd.Series(values, index=series.index)
 
 
-PERTURBATIONS: dict[str, callable] = {
+PERTURBATIONS: dict[str, Any] = {
     "random_id": _perturb_random_id,
     "shuffle": _perturb_shuffle,
 }
@@ -234,6 +234,9 @@ def run_behavioral_check(
     flip_rates = [r.get("flip_rate", 0) for r in results if r["type"] == "invariance"]
     max_flip = max(flip_rates) if flip_rates else 0
 
+    from typing import Literal
+
+    status: Literal["pass", "warn", "fail", "skip"]
     if has_fail:
         status = "fail"
         summary = f"{n_fail}/{n_tests} behavioral tests failed"

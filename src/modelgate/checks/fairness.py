@@ -136,6 +136,9 @@ def run_fairness_check(
     duration = time.time() - start
 
     # Determine status
+    from typing import Literal
+
+    status: Literal["pass", "warn", "fail", "skip"]
     if max_metric_value >= config.fail_at:
         status = "fail"
         summary = f"{config.metric} {max_metric_value:.2f} >= {config.fail_at}"

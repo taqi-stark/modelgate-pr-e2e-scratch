@@ -1,0 +1,1946 @@
+{
+  "summary": {
+    "feature_leakage": {
+      "description": "Add a column derived from the target",
+      "modelgate_detection_rate": 1.0,
+      "baseline_detection_rate": 1.0,
+      "modelgate_wins": false,
+      "n_trials": 30
+    },
+    "label_shift": {
+      "description": "Corrupt labels in one subgroup of the train set",
+      "modelgate_detection_rate": 0.9333333333333333,
+      "baseline_detection_rate": 0.9333333333333333,
+      "modelgate_wins": false,
+      "n_trials": 30
+    },
+    "degraded_slice": {
+      "description": "Remove 90% of one subgroup from training data",
+      "modelgate_detection_rate": 1.0,
+      "baseline_detection_rate": 0.03333333333333333,
+      "modelgate_wins": true,
+      "n_trials": 30
+    },
+    "schema_drift": {
+      "description": "Change a column's scale or unit",
+      "modelgate_detection_rate": 1.0,
+      "baseline_detection_rate": 0.4,
+      "modelgate_wins": true,
+      "n_trials": 30
+    },
+    "latency_regression": {
+      "description": "Swap in a much larger slow model",
+      "modelgate_detection_rate": 1.0,
+      "baseline_detection_rate": 0.0,
+      "modelgate_wins": true,
+      "n_trials": 30
+    },
+    "fairness_regression": {
+      "description": "Bias sampling against one protected group",
+      "modelgate_detection_rate": 0.43333333333333335,
+      "baseline_detection_rate": 0.7666666666666667,
+      "modelgate_wins": false,
+      "n_trials": 30
+    },
+    "noop": {
+      "description": "Retrain with a different seed (should PASS)",
+      "modelgate_detection_rate": 0.0,
+      "baseline_detection_rate": 0.0,
+      "modelgate_wins": true,
+      "n_trials": 30
+    }
+  },
+  "details": [
+    {
+      "fault_type": "feature_leakage",
+      "seed": 42,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.909,
+      "candidate_acc": 1.0
+    },
+    {
+      "fault_type": "feature_leakage",
+      "seed": 43,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.911,
+      "candidate_acc": 1.0
+    },
+    {
+      "fault_type": "feature_leakage",
+      "seed": 44,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.908,
+      "candidate_acc": 1.0
+    },
+    {
+      "fault_type": "feature_leakage",
+      "seed": 45,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.923,
+      "candidate_acc": 1.0
+    },
+    {
+      "fault_type": "feature_leakage",
+      "seed": 46,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.886,
+      "candidate_acc": 1.0
+    },
+    {
+      "fault_type": "feature_leakage",
+      "seed": 47,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.905,
+      "candidate_acc": 1.0
+    },
+    {
+      "fault_type": "feature_leakage",
+      "seed": 48,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.918,
+      "candidate_acc": 1.0
+    },
+    {
+      "fault_type": "feature_leakage",
+      "seed": 49,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.906,
+      "candidate_acc": 1.0
+    },
+    {
+      "fault_type": "feature_leakage",
+      "seed": 50,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.902,
+      "candidate_acc": 1.0
+    },
+    {
+      "fault_type": "feature_leakage",
+      "seed": 51,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.927,
+      "candidate_acc": 1.0
+    },
+    {
+      "fault_type": "feature_leakage",
+      "seed": 52,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.888,
+      "candidate_acc": 1.0
+    },
+    {
+      "fault_type": "feature_leakage",
+      "seed": 53,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.906,
+      "candidate_acc": 1.0
+    },
+    {
+      "fault_type": "feature_leakage",
+      "seed": 54,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.918,
+      "candidate_acc": 1.0
+    },
+    {
+      "fault_type": "feature_leakage",
+      "seed": 55,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.92,
+      "candidate_acc": 1.0
+    },
+    {
+      "fault_type": "feature_leakage",
+      "seed": 56,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.893,
+      "candidate_acc": 1.0
+    },
+    {
+      "fault_type": "feature_leakage",
+      "seed": 57,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.892,
+      "candidate_acc": 1.0
+    },
+    {
+      "fault_type": "feature_leakage",
+      "seed": 58,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.909,
+      "candidate_acc": 1.0
+    },
+    {
+      "fault_type": "feature_leakage",
+      "seed": 59,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.911,
+      "candidate_acc": 1.0
+    },
+    {
+      "fault_type": "feature_leakage",
+      "seed": 60,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.89,
+      "candidate_acc": 1.0
+    },
+    {
+      "fault_type": "feature_leakage",
+      "seed": 61,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.899,
+      "candidate_acc": 1.0
+    },
+    {
+      "fault_type": "feature_leakage",
+      "seed": 62,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.923,
+      "candidate_acc": 1.0
+    },
+    {
+      "fault_type": "feature_leakage",
+      "seed": 63,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.906,
+      "candidate_acc": 1.0
+    },
+    {
+      "fault_type": "feature_leakage",
+      "seed": 64,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.904,
+      "candidate_acc": 1.0
+    },
+    {
+      "fault_type": "feature_leakage",
+      "seed": 65,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.914,
+      "candidate_acc": 1.0
+    },
+    {
+      "fault_type": "feature_leakage",
+      "seed": 66,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.905,
+      "candidate_acc": 1.0
+    },
+    {
+      "fault_type": "feature_leakage",
+      "seed": 67,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.911,
+      "candidate_acc": 1.0
+    },
+    {
+      "fault_type": "feature_leakage",
+      "seed": 68,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.911,
+      "candidate_acc": 1.0
+    },
+    {
+      "fault_type": "feature_leakage",
+      "seed": 69,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.906,
+      "candidate_acc": 1.0
+    },
+    {
+      "fault_type": "feature_leakage",
+      "seed": 70,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.925,
+      "candidate_acc": 1.0
+    },
+    {
+      "fault_type": "feature_leakage",
+      "seed": 71,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.908,
+      "candidate_acc": 1.0
+    },
+    {
+      "fault_type": "label_shift",
+      "seed": 42,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.909,
+      "candidate_acc": 0.863
+    },
+    {
+      "fault_type": "label_shift",
+      "seed": 43,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.911,
+      "candidate_acc": 0.891
+    },
+    {
+      "fault_type": "label_shift",
+      "seed": 44,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.908,
+      "candidate_acc": 0.881
+    },
+    {
+      "fault_type": "label_shift",
+      "seed": 45,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.923,
+      "candidate_acc": 0.902
+    },
+    {
+      "fault_type": "label_shift",
+      "seed": 46,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.886,
+      "candidate_acc": 0.864
+    },
+    {
+      "fault_type": "label_shift",
+      "seed": 47,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.905,
+      "candidate_acc": 0.896
+    },
+    {
+      "fault_type": "label_shift",
+      "seed": 48,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.918,
+      "candidate_acc": 0.878
+    },
+    {
+      "fault_type": "label_shift",
+      "seed": 49,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.906,
+      "candidate_acc": 0.864
+    },
+    {
+      "fault_type": "label_shift",
+      "seed": 50,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.902,
+      "candidate_acc": 0.869
+    },
+    {
+      "fault_type": "label_shift",
+      "seed": 51,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.927,
+      "candidate_acc": 0.91
+    },
+    {
+      "fault_type": "label_shift",
+      "seed": 52,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.888,
+      "candidate_acc": 0.878
+    },
+    {
+      "fault_type": "label_shift",
+      "seed": 53,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.906,
+      "candidate_acc": 0.866
+    },
+    {
+      "fault_type": "label_shift",
+      "seed": 54,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.918,
+      "candidate_acc": 0.867
+    },
+    {
+      "fault_type": "label_shift",
+      "seed": 55,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.92,
+      "candidate_acc": 0.908
+    },
+    {
+      "fault_type": "label_shift",
+      "seed": 56,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.893,
+      "candidate_acc": 0.866
+    },
+    {
+      "fault_type": "label_shift",
+      "seed": 57,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.892,
+      "candidate_acc": 0.842
+    },
+    {
+      "fault_type": "label_shift",
+      "seed": 58,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.909,
+      "candidate_acc": 0.874
+    },
+    {
+      "fault_type": "label_shift",
+      "seed": 59,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.911,
+      "candidate_acc": 0.888
+    },
+    {
+      "fault_type": "label_shift",
+      "seed": 60,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.89,
+      "candidate_acc": 0.867
+    },
+    {
+      "fault_type": "label_shift",
+      "seed": 61,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.899,
+      "candidate_acc": 0.874
+    },
+    {
+      "fault_type": "label_shift",
+      "seed": 62,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.923,
+      "candidate_acc": 0.9
+    },
+    {
+      "fault_type": "label_shift",
+      "seed": 63,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.906,
+      "candidate_acc": 0.859
+    },
+    {
+      "fault_type": "label_shift",
+      "seed": 64,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.904,
+      "candidate_acc": 0.888
+    },
+    {
+      "fault_type": "label_shift",
+      "seed": 65,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.914,
+      "candidate_acc": 0.897
+    },
+    {
+      "fault_type": "label_shift",
+      "seed": 66,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.905,
+      "candidate_acc": 0.874
+    },
+    {
+      "fault_type": "label_shift",
+      "seed": 67,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.911,
+      "candidate_acc": 0.878
+    },
+    {
+      "fault_type": "label_shift",
+      "seed": 68,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.911,
+      "candidate_acc": 0.894
+    },
+    {
+      "fault_type": "label_shift",
+      "seed": 69,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.906,
+      "candidate_acc": 0.898
+    },
+    {
+      "fault_type": "label_shift",
+      "seed": 70,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.925,
+      "candidate_acc": 0.902
+    },
+    {
+      "fault_type": "label_shift",
+      "seed": 71,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.908,
+      "candidate_acc": 0.884
+    },
+    {
+      "fault_type": "degraded_slice",
+      "seed": 42,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.909,
+      "candidate_acc": 0.914
+    },
+    {
+      "fault_type": "degraded_slice",
+      "seed": 43,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.911,
+      "candidate_acc": 0.903
+    },
+    {
+      "fault_type": "degraded_slice",
+      "seed": 44,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.908,
+      "candidate_acc": 0.907
+    },
+    {
+      "fault_type": "degraded_slice",
+      "seed": 45,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.923,
+      "candidate_acc": 0.921
+    },
+    {
+      "fault_type": "degraded_slice",
+      "seed": 46,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.886,
+      "candidate_acc": 0.885
+    },
+    {
+      "fault_type": "degraded_slice",
+      "seed": 47,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.905,
+      "candidate_acc": 0.906
+    },
+    {
+      "fault_type": "degraded_slice",
+      "seed": 48,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.918,
+      "candidate_acc": 0.915
+    },
+    {
+      "fault_type": "degraded_slice",
+      "seed": 49,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.906,
+      "candidate_acc": 0.904
+    },
+    {
+      "fault_type": "degraded_slice",
+      "seed": 50,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.902,
+      "candidate_acc": 0.902
+    },
+    {
+      "fault_type": "degraded_slice",
+      "seed": 51,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.927,
+      "candidate_acc": 0.928
+    },
+    {
+      "fault_type": "degraded_slice",
+      "seed": 52,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.888,
+      "candidate_acc": 0.888
+    },
+    {
+      "fault_type": "degraded_slice",
+      "seed": 53,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.906,
+      "candidate_acc": 0.903
+    },
+    {
+      "fault_type": "degraded_slice",
+      "seed": 54,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.918,
+      "candidate_acc": 0.918
+    },
+    {
+      "fault_type": "degraded_slice",
+      "seed": 55,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.92,
+      "candidate_acc": 0.92
+    },
+    {
+      "fault_type": "degraded_slice",
+      "seed": 56,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.893,
+      "candidate_acc": 0.892
+    },
+    {
+      "fault_type": "degraded_slice",
+      "seed": 57,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.892,
+      "candidate_acc": 0.886
+    },
+    {
+      "fault_type": "degraded_slice",
+      "seed": 58,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.909,
+      "candidate_acc": 0.903
+    },
+    {
+      "fault_type": "degraded_slice",
+      "seed": 59,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.911,
+      "candidate_acc": 0.91
+    },
+    {
+      "fault_type": "degraded_slice",
+      "seed": 60,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.89,
+      "candidate_acc": 0.887
+    },
+    {
+      "fault_type": "degraded_slice",
+      "seed": 61,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.899,
+      "candidate_acc": 0.896
+    },
+    {
+      "fault_type": "degraded_slice",
+      "seed": 62,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.923,
+      "candidate_acc": 0.925
+    },
+    {
+      "fault_type": "degraded_slice",
+      "seed": 63,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.906,
+      "candidate_acc": 0.907
+    },
+    {
+      "fault_type": "degraded_slice",
+      "seed": 64,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.904,
+      "candidate_acc": 0.905
+    },
+    {
+      "fault_type": "degraded_slice",
+      "seed": 65,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.914,
+      "candidate_acc": 0.914
+    },
+    {
+      "fault_type": "degraded_slice",
+      "seed": 66,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.905,
+      "candidate_acc": 0.9
+    },
+    {
+      "fault_type": "degraded_slice",
+      "seed": 67,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.911,
+      "candidate_acc": 0.911
+    },
+    {
+      "fault_type": "degraded_slice",
+      "seed": 68,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.911,
+      "candidate_acc": 0.909
+    },
+    {
+      "fault_type": "degraded_slice",
+      "seed": 69,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.906,
+      "candidate_acc": 0.903
+    },
+    {
+      "fault_type": "degraded_slice",
+      "seed": 70,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.925,
+      "candidate_acc": 0.921
+    },
+    {
+      "fault_type": "degraded_slice",
+      "seed": 71,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.908,
+      "candidate_acc": 0.898
+    },
+    {
+      "fault_type": "schema_drift",
+      "seed": 42,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.909,
+      "candidate_acc": 0.91
+    },
+    {
+      "fault_type": "schema_drift",
+      "seed": 43,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.911,
+      "candidate_acc": 0.87
+    },
+    {
+      "fault_type": "schema_drift",
+      "seed": 44,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.908,
+      "candidate_acc": 0.901
+    },
+    {
+      "fault_type": "schema_drift",
+      "seed": 45,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.923,
+      "candidate_acc": 0.738
+    },
+    {
+      "fault_type": "schema_drift",
+      "seed": 46,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.886,
+      "candidate_acc": 0.859
+    },
+    {
+      "fault_type": "schema_drift",
+      "seed": 47,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.905,
+      "candidate_acc": 0.597
+    },
+    {
+      "fault_type": "schema_drift",
+      "seed": 48,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.918,
+      "candidate_acc": 0.921
+    },
+    {
+      "fault_type": "schema_drift",
+      "seed": 49,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.906,
+      "candidate_acc": 0.908
+    },
+    {
+      "fault_type": "schema_drift",
+      "seed": 50,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.902,
+      "candidate_acc": 0.876
+    },
+    {
+      "fault_type": "schema_drift",
+      "seed": 51,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.927,
+      "candidate_acc": 0.098
+    },
+    {
+      "fault_type": "schema_drift",
+      "seed": 52,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.888,
+      "candidate_acc": 0.8
+    },
+    {
+      "fault_type": "schema_drift",
+      "seed": 53,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.906,
+      "candidate_acc": 0.893
+    },
+    {
+      "fault_type": "schema_drift",
+      "seed": 54,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.918,
+      "candidate_acc": 0.92
+    },
+    {
+      "fault_type": "schema_drift",
+      "seed": 55,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.92,
+      "candidate_acc": 0.913
+    },
+    {
+      "fault_type": "schema_drift",
+      "seed": 56,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.893,
+      "candidate_acc": 0.895
+    },
+    {
+      "fault_type": "schema_drift",
+      "seed": 57,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.892,
+      "candidate_acc": 0.89
+    },
+    {
+      "fault_type": "schema_drift",
+      "seed": 58,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.909,
+      "candidate_acc": 0.909
+    },
+    {
+      "fault_type": "schema_drift",
+      "seed": 59,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.911,
+      "candidate_acc": 0.866
+    },
+    {
+      "fault_type": "schema_drift",
+      "seed": 60,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.89,
+      "candidate_acc": 0.887
+    },
+    {
+      "fault_type": "schema_drift",
+      "seed": 61,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.899,
+      "candidate_acc": 0.899
+    },
+    {
+      "fault_type": "schema_drift",
+      "seed": 62,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.923,
+      "candidate_acc": 0.73
+    },
+    {
+      "fault_type": "schema_drift",
+      "seed": 63,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.906,
+      "candidate_acc": 0.906
+    },
+    {
+      "fault_type": "schema_drift",
+      "seed": 64,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.904,
+      "candidate_acc": 0.905
+    },
+    {
+      "fault_type": "schema_drift",
+      "seed": 65,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.914,
+      "candidate_acc": 0.915
+    },
+    {
+      "fault_type": "schema_drift",
+      "seed": 66,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.905,
+      "candidate_acc": 0.597
+    },
+    {
+      "fault_type": "schema_drift",
+      "seed": 67,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.911,
+      "candidate_acc": 0.912
+    },
+    {
+      "fault_type": "schema_drift",
+      "seed": 68,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.911,
+      "candidate_acc": 0.912
+    },
+    {
+      "fault_type": "schema_drift",
+      "seed": 69,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.906,
+      "candidate_acc": 0.905
+    },
+    {
+      "fault_type": "schema_drift",
+      "seed": 70,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.925,
+      "candidate_acc": 0.923
+    },
+    {
+      "fault_type": "schema_drift",
+      "seed": 71,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.908,
+      "candidate_acc": 0.894
+    },
+    {
+      "fault_type": "latency_regression",
+      "seed": 42,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.909,
+      "candidate_acc": 0.915
+    },
+    {
+      "fault_type": "latency_regression",
+      "seed": 43,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.911,
+      "candidate_acc": 0.914
+    },
+    {
+      "fault_type": "latency_regression",
+      "seed": 44,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.908,
+      "candidate_acc": 0.908
+    },
+    {
+      "fault_type": "latency_regression",
+      "seed": 45,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.923,
+      "candidate_acc": 0.927
+    },
+    {
+      "fault_type": "latency_regression",
+      "seed": 46,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.886,
+      "candidate_acc": 0.889
+    },
+    {
+      "fault_type": "latency_regression",
+      "seed": 47,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.905,
+      "candidate_acc": 0.907
+    },
+    {
+      "fault_type": "latency_regression",
+      "seed": 48,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.918,
+      "candidate_acc": 0.921
+    },
+    {
+      "fault_type": "latency_regression",
+      "seed": 49,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.906,
+      "candidate_acc": 0.907
+    },
+    {
+      "fault_type": "latency_regression",
+      "seed": 50,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.902,
+      "candidate_acc": 0.904
+    },
+    {
+      "fault_type": "latency_regression",
+      "seed": 51,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.927,
+      "candidate_acc": 0.929
+    },
+    {
+      "fault_type": "latency_regression",
+      "seed": 52,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.888,
+      "candidate_acc": 0.891
+    },
+    {
+      "fault_type": "latency_regression",
+      "seed": 53,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.906,
+      "candidate_acc": 0.907
+    },
+    {
+      "fault_type": "latency_regression",
+      "seed": 54,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.918,
+      "candidate_acc": 0.921
+    },
+    {
+      "fault_type": "latency_regression",
+      "seed": 55,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.92,
+      "candidate_acc": 0.922
+    },
+    {
+      "fault_type": "latency_regression",
+      "seed": 56,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.893,
+      "candidate_acc": 0.899
+    },
+    {
+      "fault_type": "latency_regression",
+      "seed": 57,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.892,
+      "candidate_acc": 0.895
+    },
+    {
+      "fault_type": "latency_regression",
+      "seed": 58,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.909,
+      "candidate_acc": 0.909
+    },
+    {
+      "fault_type": "latency_regression",
+      "seed": 59,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.911,
+      "candidate_acc": 0.913
+    },
+    {
+      "fault_type": "latency_regression",
+      "seed": 60,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.89,
+      "candidate_acc": 0.89
+    },
+    {
+      "fault_type": "latency_regression",
+      "seed": 61,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.899,
+      "candidate_acc": 0.903
+    },
+    {
+      "fault_type": "latency_regression",
+      "seed": 62,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.923,
+      "candidate_acc": 0.923
+    },
+    {
+      "fault_type": "latency_regression",
+      "seed": 63,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.906,
+      "candidate_acc": 0.906
+    },
+    {
+      "fault_type": "latency_regression",
+      "seed": 64,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.904,
+      "candidate_acc": 0.907
+    },
+    {
+      "fault_type": "latency_regression",
+      "seed": 65,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.914,
+      "candidate_acc": 0.913
+    },
+    {
+      "fault_type": "latency_regression",
+      "seed": 66,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.905,
+      "candidate_acc": 0.906
+    },
+    {
+      "fault_type": "latency_regression",
+      "seed": 67,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.911,
+      "candidate_acc": 0.912
+    },
+    {
+      "fault_type": "latency_regression",
+      "seed": 68,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.911,
+      "candidate_acc": 0.912
+    },
+    {
+      "fault_type": "latency_regression",
+      "seed": 69,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.906,
+      "candidate_acc": 0.905
+    },
+    {
+      "fault_type": "latency_regression",
+      "seed": 70,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.925,
+      "candidate_acc": 0.924
+    },
+    {
+      "fault_type": "latency_regression",
+      "seed": 71,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.908,
+      "candidate_acc": 0.911
+    },
+    {
+      "fault_type": "fairness_regression",
+      "seed": 42,
+      "modelgate_detected": true,
+      "modelgate_status": "warn",
+      "baseline_detected": true,
+      "champion_acc": 0.909,
+      "candidate_acc": 0.891
+    },
+    {
+      "fault_type": "fairness_regression",
+      "seed": 43,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": true,
+      "champion_acc": 0.911,
+      "candidate_acc": 0.9
+    },
+    {
+      "fault_type": "fairness_regression",
+      "seed": 44,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.908,
+      "candidate_acc": 0.887
+    },
+    {
+      "fault_type": "fairness_regression",
+      "seed": 45,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.923,
+      "candidate_acc": 0.909
+    },
+    {
+      "fault_type": "fairness_regression",
+      "seed": 46,
+      "modelgate_detected": true,
+      "modelgate_status": "warn",
+      "baseline_detected": true,
+      "champion_acc": 0.886,
+      "candidate_acc": 0.867
+    },
+    {
+      "fault_type": "fairness_regression",
+      "seed": 47,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": true,
+      "champion_acc": 0.905,
+      "candidate_acc": 0.895
+    },
+    {
+      "fault_type": "fairness_regression",
+      "seed": 48,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": true,
+      "champion_acc": 0.918,
+      "candidate_acc": 0.903
+    },
+    {
+      "fault_type": "fairness_regression",
+      "seed": 49,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.906,
+      "candidate_acc": 0.897
+    },
+    {
+      "fault_type": "fairness_regression",
+      "seed": 50,
+      "modelgate_detected": true,
+      "modelgate_status": "warn",
+      "baseline_detected": true,
+      "champion_acc": 0.902,
+      "candidate_acc": 0.885
+    },
+    {
+      "fault_type": "fairness_regression",
+      "seed": 51,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.927,
+      "candidate_acc": 0.919
+    },
+    {
+      "fault_type": "fairness_regression",
+      "seed": 52,
+      "modelgate_detected": true,
+      "modelgate_status": "warn",
+      "baseline_detected": true,
+      "champion_acc": 0.888,
+      "candidate_acc": 0.872
+    },
+    {
+      "fault_type": "fairness_regression",
+      "seed": 53,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": true,
+      "champion_acc": 0.906,
+      "candidate_acc": 0.893
+    },
+    {
+      "fault_type": "fairness_regression",
+      "seed": 54,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.918,
+      "candidate_acc": 0.893
+    },
+    {
+      "fault_type": "fairness_regression",
+      "seed": 55,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": true,
+      "champion_acc": 0.92,
+      "candidate_acc": 0.91
+    },
+    {
+      "fault_type": "fairness_regression",
+      "seed": 56,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.893,
+      "candidate_acc": 0.875
+    },
+    {
+      "fault_type": "fairness_regression",
+      "seed": 57,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.892,
+      "candidate_acc": 0.884
+    },
+    {
+      "fault_type": "fairness_regression",
+      "seed": 58,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.909,
+      "candidate_acc": 0.9
+    },
+    {
+      "fault_type": "fairness_regression",
+      "seed": 59,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": true,
+      "champion_acc": 0.911,
+      "candidate_acc": 0.9
+    },
+    {
+      "fault_type": "fairness_regression",
+      "seed": 60,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.89,
+      "candidate_acc": 0.868
+    },
+    {
+      "fault_type": "fairness_regression",
+      "seed": 61,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.899,
+      "candidate_acc": 0.879
+    },
+    {
+      "fault_type": "fairness_regression",
+      "seed": 62,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": true,
+      "champion_acc": 0.923,
+      "candidate_acc": 0.91
+    },
+    {
+      "fault_type": "fairness_regression",
+      "seed": 63,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": true,
+      "champion_acc": 0.906,
+      "candidate_acc": 0.895
+    },
+    {
+      "fault_type": "fairness_regression",
+      "seed": 64,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.904,
+      "candidate_acc": 0.879
+    },
+    {
+      "fault_type": "fairness_regression",
+      "seed": 65,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.914,
+      "candidate_acc": 0.912
+    },
+    {
+      "fault_type": "fairness_regression",
+      "seed": 66,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.905,
+      "candidate_acc": 0.877
+    },
+    {
+      "fault_type": "fairness_regression",
+      "seed": 67,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": true,
+      "champion_acc": 0.911,
+      "candidate_acc": 0.899
+    },
+    {
+      "fault_type": "fairness_regression",
+      "seed": 68,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.911,
+      "candidate_acc": 0.905
+    },
+    {
+      "fault_type": "fairness_regression",
+      "seed": 69,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.906,
+      "candidate_acc": 0.897
+    },
+    {
+      "fault_type": "fairness_regression",
+      "seed": 70,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.925,
+      "candidate_acc": 0.909
+    },
+    {
+      "fault_type": "fairness_regression",
+      "seed": 71,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": true,
+      "champion_acc": 0.908,
+      "candidate_acc": 0.898
+    },
+    {
+      "fault_type": "noop",
+      "seed": 42,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.909,
+      "candidate_acc": 0.909
+    },
+    {
+      "fault_type": "noop",
+      "seed": 43,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.911,
+      "candidate_acc": 0.911
+    },
+    {
+      "fault_type": "noop",
+      "seed": 44,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.908,
+      "candidate_acc": 0.908
+    },
+    {
+      "fault_type": "noop",
+      "seed": 45,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.923,
+      "candidate_acc": 0.923
+    },
+    {
+      "fault_type": "noop",
+      "seed": 46,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.886,
+      "candidate_acc": 0.886
+    },
+    {
+      "fault_type": "noop",
+      "seed": 47,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.905,
+      "candidate_acc": 0.905
+    },
+    {
+      "fault_type": "noop",
+      "seed": 48,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.918,
+      "candidate_acc": 0.918
+    },
+    {
+      "fault_type": "noop",
+      "seed": 49,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.906,
+      "candidate_acc": 0.906
+    },
+    {
+      "fault_type": "noop",
+      "seed": 50,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.902,
+      "candidate_acc": 0.902
+    },
+    {
+      "fault_type": "noop",
+      "seed": 51,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.927,
+      "candidate_acc": 0.927
+    },
+    {
+      "fault_type": "noop",
+      "seed": 52,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.888,
+      "candidate_acc": 0.888
+    },
+    {
+      "fault_type": "noop",
+      "seed": 53,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.906,
+      "candidate_acc": 0.906
+    },
+    {
+      "fault_type": "noop",
+      "seed": 54,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.918,
+      "candidate_acc": 0.918
+    },
+    {
+      "fault_type": "noop",
+      "seed": 55,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.92,
+      "candidate_acc": 0.92
+    },
+    {
+      "fault_type": "noop",
+      "seed": 56,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.893,
+      "candidate_acc": 0.893
+    },
+    {
+      "fault_type": "noop",
+      "seed": 57,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.892,
+      "candidate_acc": 0.892
+    },
+    {
+      "fault_type": "noop",
+      "seed": 58,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.909,
+      "candidate_acc": 0.909
+    },
+    {
+      "fault_type": "noop",
+      "seed": 59,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.911,
+      "candidate_acc": 0.911
+    },
+    {
+      "fault_type": "noop",
+      "seed": 60,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.89,
+      "candidate_acc": 0.89
+    },
+    {
+      "fault_type": "noop",
+      "seed": 61,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.899,
+      "candidate_acc": 0.899
+    },
+    {
+      "fault_type": "noop",
+      "seed": 62,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.923,
+      "candidate_acc": 0.923
+    },
+    {
+      "fault_type": "noop",
+      "seed": 63,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.906,
+      "candidate_acc": 0.906
+    },
+    {
+      "fault_type": "noop",
+      "seed": 64,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.904,
+      "candidate_acc": 0.904
+    },
+    {
+      "fault_type": "noop",
+      "seed": 65,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.914,
+      "candidate_acc": 0.914
+    },
+    {
+      "fault_type": "noop",
+      "seed": 66,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.905,
+      "candidate_acc": 0.905
+    },
+    {
+      "fault_type": "noop",
+      "seed": 67,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.911,
+      "candidate_acc": 0.911
+    },
+    {
+      "fault_type": "noop",
+      "seed": 68,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.911,
+      "candidate_acc": 0.911
+    },
+    {
+      "fault_type": "noop",
+      "seed": 69,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.906,
+      "candidate_acc": 0.906
+    },
+    {
+      "fault_type": "noop",
+      "seed": 70,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.925,
+      "candidate_acc": 0.925
+    },
+    {
+      "fault_type": "noop",
+      "seed": 71,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.908,
+      "candidate_acc": 0.908
+    }
+  ],
+  "n_seeds": 30
+}

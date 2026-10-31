@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 import pandas as pd
-import numpy as np
 
-from modelgate.benchmark import _generate_data, inject_fault, run_single_trial, FAULT_DESCRIPTIONS
+from modelgate.benchmark import FAULT_DESCRIPTIONS, _generate_data, inject_fault, run_single_trial
 
 
 def test_generate_data() -> None:
@@ -19,7 +18,7 @@ def test_generate_data() -> None:
 def test_inject_faults() -> None:
     train_df, _ = _generate_data(seed=42, n=100)
 
-    for fault in FAULT_DESCRIPTIONS.keys():
+    for fault in FAULT_DESCRIPTIONS:
         faulty, override = inject_fault(train_df, fault, seed=42)
         assert isinstance(faulty, pd.DataFrame)
         if fault == "feature_leakage":

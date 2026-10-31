@@ -56,6 +56,16 @@ def run_drift_check(
 
     for col in feature_cols:
         if col not in reference_df.columns:
+            feature_scores.append(
+                {
+                    "feature": col,
+                    "psi": 1.0,
+                    "ks_statistic": 1.0,
+                    "ks_pvalue": 0.0,
+                    "note": "New feature not in reference data",
+                }
+            )
+            max_psi = max(max_psi, 1.0)
             continue
 
         train_vals = train_df[col].dropna()
@@ -94,7 +104,9 @@ def run_drift_check(
 
     duration = time.time() - start
 
-    # Determine status
+    from typing import Literal
+
+    status: Literal["pass", "warn", "fail", "skip"]
     if max_psi >= config.fail_at:
         status = "fail"
         summary = f"Max PSI {max_psi:.2f} >= {config.fail_at} (top: {top_5[0]['feature']})"

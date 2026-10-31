@@ -129,7 +129,7 @@ def get_package_versions() -> dict[str, str]:
         return {}
 
 
-def import_entrypoint(entrypoint: str) -> callable:
+def import_entrypoint(entrypoint: str) -> Any:
     """Import a function from a module:function entrypoint string.
 
     Args:

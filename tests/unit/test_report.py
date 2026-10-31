@@ -9,9 +9,18 @@ from modelgate.verdict import CheckResult, compute_verdict
 
 def test_build_pr_comment() -> None:
     results = [
-        CheckResult(name="data_contract", status="pass", summary="0 violations", metrics={"violations": 0}),
-        CheckResult(name="drift", status="warn", summary="income PSI 0.14", metrics={"psi_max": 0.14}),
-        CheckResult(name="slices", status="fail", summary="region=North F1 dropped 0.07", metrics={"worst_drop": 0.07}),
+        CheckResult(
+            name="data_contract", status="pass", summary="0 violations", metrics={"violations": 0}
+        ),
+        CheckResult(
+            name="drift", status="warn", summary="income PSI 0.14", metrics={"psi_max": 0.14}
+        ),
+        CheckResult(
+            name="slices",
+            status="fail",
+            summary="region=North F1 dropped 0.07",
+            metrics={"worst_drop": 0.07},
+        ),
     ]
     verdict = compute_verdict(results)
     comment = build_pr_comment(verdict, candidate_sha="a1b2c3d", seed=42, data_hash="9f3a123")
@@ -25,7 +34,9 @@ def test_build_pr_comment() -> None:
 
 def test_build_html_report() -> None:
     results = [
-        CheckResult(name="data_contract", status="pass", summary="0 violations", metrics={"violations": 0}),
+        CheckResult(
+            name="data_contract", status="pass", summary="0 violations", metrics={"violations": 0}
+        ),
     ]
     verdict = compute_verdict(results)
     lineage = LineageInfo(git_sha="1234567", seed=42)
@@ -38,7 +49,9 @@ def test_build_html_report() -> None:
 
 def test_build_json_payload() -> None:
     results = [
-        CheckResult(name="data_contract", status="pass", summary="0 violations", metrics={"violations": 0}),
+        CheckResult(
+            name="data_contract", status="pass", summary="0 violations", metrics={"violations": 0}
+        ),
     ]
     verdict = compute_verdict(results)
     lineage = LineageInfo(git_sha="1234567", seed=42)

@@ -2,10 +2,8 @@
 
 from __future__ import annotations
 
-import pytest
-
 from modelgate.config import VerdictConfig
-from modelgate.verdict import CheckResult, Verdict, compute_verdict
+from modelgate.verdict import CheckResult, compute_verdict
 
 
 class TestComputeVerdict:
@@ -111,7 +109,7 @@ class TestComputeVerdict:
 
         # With fail_if_any_fail=False, has_fail is True but we don't force FAIL
         # We still have warnings from the fail check
-        verdict = compute_verdict(results, config=config)
+        compute_verdict(results, config=config)
 
         # When fail_if_any_fail is False, a fail check doesn't force FAIL overall
         # but since there's a fail reason, has_warn logic kicks in

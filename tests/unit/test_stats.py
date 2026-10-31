@@ -6,10 +6,8 @@ Includes unit tests and property-based tests with Hypothesis.
 from __future__ import annotations
 
 import numpy as np
-import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
-from hypothesis.extra.numpy import arrays
 
 from modelgate.stats import (
     BootstrapResult,
@@ -21,7 +19,6 @@ from modelgate.stats import (
     ks_test,
     paired_bootstrap_ci,
 )
-
 
 # ──────────────────────────────────────────────────
 # Paired Bootstrap CI
@@ -42,9 +39,7 @@ class TestPairedBootstrapCI:
         y_true = rng.randint(0, 2, size=200)
         preds = rng.randint(0, 2, size=200)
 
-        result = paired_bootstrap_ci(
-            y_true, preds, preds, accuracy, n_bootstrap=500, seed=42
-        )
+        result = paired_bootstrap_ci(y_true, preds, preds, accuracy, n_bootstrap=500, seed=42)
 
         assert result.point_estimate == 0.0
         assert result.ci_lower <= 0.0 <= result.ci_upper
@@ -57,9 +52,7 @@ class TestPairedBootstrapCI:
         model_a = y_true.copy()
         model_b = rng.randint(0, 2, size=500)
 
-        result = paired_bootstrap_ci(
-            y_true, model_a, model_b, accuracy, n_bootstrap=500, seed=42
-        )
+        result = paired_bootstrap_ci(y_true, model_a, model_b, accuracy, n_bootstrap=500, seed=42)
 
         assert result.point_estimate > 0.0
         assert result.ci_lower > 0.0  # Even lower bound should be positive
@@ -86,9 +79,7 @@ class TestPairedBootstrapCI:
         y_true = rng.randint(0, 2, size=n)
         preds = rng.randint(0, 2, size=n)
 
-        result = paired_bootstrap_ci(
-            y_true, preds, preds, accuracy, n_bootstrap=200, seed=seed
-        )
+        result = paired_bootstrap_ci(y_true, preds, preds, accuracy, n_bootstrap=200, seed=seed)
 
         assert result.point_estimate == 0.0
         assert result.ci_lower <= 0.0 <= result.ci_upper

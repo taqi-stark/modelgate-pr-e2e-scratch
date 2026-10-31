@@ -22,8 +22,8 @@ from modelgate.verdict import CheckResult
 def _measure_latency(
     model: Any,
     X_sample: pd.DataFrame,
-    n_calls: int = 1000,
-    n_warmup: int = 100,
+    n_calls: int = 100,
+    n_warmup: int = 10,
 ) -> tuple[float, float]:
     """Measure single-row prediction latency.
 
@@ -87,7 +87,7 @@ def _measure_peak_memory(model: Any, X_sample: pd.DataFrame) -> float:
     tracemalloc.start()
 
     # Run some predictions
-    for _ in range(100):
+    for _ in range(10):
         model.predict(X_sample.iloc[[0]])
 
     _, peak = tracemalloc.get_traced_memory()
@@ -165,6 +165,9 @@ def run_budgets_check(
         **champion_metrics,
     }
 
+    from typing import Literal
+
+    status: Literal["pass", "warn", "fail", "skip"]
     if violations:
         status = "fail"
         summary = "; ".join(violations)

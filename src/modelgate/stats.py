@@ -7,6 +7,8 @@ All functions are deterministic given a numpy RandomState / seed.
 
 from __future__ import annotations
 
+from typing import Any, Callable
+
 from dataclasses import dataclass
 
 import numpy as np
@@ -30,7 +32,7 @@ def paired_bootstrap_ci(
     y_true: NDArray[np.int_],
     scores_a: NDArray[np.float64],
     scores_b: NDArray[np.float64],
-    metric_fn: callable,
+    metric_fn: Any,
     n_bootstrap: int = 1000,
     confidence: float = 0.95,
     seed: int = 42,

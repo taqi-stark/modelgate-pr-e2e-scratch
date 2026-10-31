@@ -33,7 +33,7 @@ class DataConfig(BaseModel):
     schema_: str = Field(default="", alias="schema")
 
     @property
-    def schema(self) -> str:
+    def schema(self) -> str:  # type: ignore[override]
         return self.schema_
 
 

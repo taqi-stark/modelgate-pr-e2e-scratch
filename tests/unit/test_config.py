@@ -12,7 +12,6 @@ from modelgate.config import (
     load_config,
 )
 
-
 VALID_YAML = textwrap.dedent("""\
     project: credit-risk-demo
     seed: 42
@@ -153,7 +152,8 @@ class TestLoadConfig:
     def test_invalid_seed(self, tmp_path: Path) -> None:
         """Test that a negative seed is rejected."""
         config_file = tmp_path / "modelgate.yaml"
-        config_file.write_text(textwrap.dedent("""\
+        config_file.write_text(
+            textwrap.dedent("""\
             project: test
             seed: -1
             model:
@@ -161,23 +161,29 @@ class TestLoadConfig:
             data:
               train: train.csv
               test: test.csv
-        """))
+        """)
+        )
 
         with pytest.raises(ValueError, match="seed must be non-negative"):
             load_config(config_file)
 
     def test_missing_required_fields(self, tmp_path: Path) -> None:
         """Test that missing required fields raise validation errors."""
+        from pydantic import ValidationError
+
         config_file = tmp_path / "modelgate.yaml"
         config_file.write_text("project: test\n")
 
-        with pytest.raises(Exception):  # Pydantic ValidationError
+        with pytest.raises(ValidationError):
             load_config(config_file)
 
     def test_invalid_task_type(self, tmp_path: Path) -> None:
         """Test that invalid task type is rejected."""
+        from pydantic import ValidationError
+
         config_file = tmp_path / "modelgate.yaml"
-        config_file.write_text(textwrap.dedent("""\
+        config_file.write_text(
+            textwrap.dedent("""\
             project: test
             seed: 42
             model:
@@ -186,9 +192,10 @@ class TestLoadConfig:
             data:
               train: train.csv
               test: test.csv
-        """))
+        """)
+        )
 
-        with pytest.raises(Exception):
+        with pytest.raises(ValidationError):
             load_config(config_file)
 
 
