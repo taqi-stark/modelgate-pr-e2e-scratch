@@ -1,57 +1,24 @@
-# ModelGate Benchmark
+# ModelGate Benchmark Results
 
-Fault-injection benchmark comparing ModelGate against an accuracy-only baseline.
-Each fault type was run with **30 independent seeds** (seeds 42–71).
+Fault injection benchmark comparing ModelGate against an accuracy-only baseline.
+Each fault type was evaluated across 30 independent seeds.
 
 ## Detection Rates
 
-| Fault | Injected Defect | ModelGate | Baseline (Acc-only) | Winner |
-|-------|----------------|-----------|---------------------|--------|
-| `feature_leakage` | Add a column derived from the target | 100% | 100% | **Tie** |
-| `label_shift` | Corrupt labels in one subgroup of the train set | 93% | 93% | **Tie** |
-| `degraded_slice` | Remove 90% of one subgroup from training data | 100% | 3% | **ModelGate** |
-| `schema_drift` | Change a column's scale or unit | 100% | 40% | **ModelGate** |
-| `latency_regression` | Swap in a much larger slow model | 100% | 0% | **ModelGate** |
-| `fairness_regression` | Bias sampling against one protected group | 43% | 77% | **Baseline** |
-| `noop` | Retrain with a different seed (should PASS) | 0% FP | 0% FP | **ModelGate** |
-
-> **FP** = false-positive rate for the no-op control. Lower is better.
+| Fault | Injected Defect | ModelGate (Count, Rate, Wilson 95% CI) | Baseline (Count, Rate, Wilson 95% CI) | Winner |
+|-------|-----------------|----------------------------------------|---------------------------------------|--------|
+| `feature_leakage` | Add a column derived from the target | 30/30 (100.0%, [88.6%, 100.0%]) | 30/30 (100.0%, [88.6%, 100.0%]) | **Tie** |
+| `label_shift` | Corrupt labels in one subgroup of the train set | 28/30 (93.3%, [78.7%, 98.2%]) | 28/30 (93.3%, [78.7%, 98.2%]) | **Tie** |
+| `degraded_slice` | Remove most of one subgroup from training data | 30/30 (100.0%, [88.6%, 100.0%]) | 0/30 (0.0%, [0.0%, 11.4%]) | **ModelGate** |
+| `schema_drift` | Change a column's scale or unit | 30/30 (100.0%, [88.6%, 100.0%]) | 17/30 (56.7%, [39.2%, 72.6%]) | **ModelGate** |
+| `latency_regression` | Swap in a much larger model | 30/30 (100.0%, [88.6%, 100.0%]) | 0/30 (0.0%, [0.0%, 11.4%]) | **ModelGate** |
+| `fairness_regression` | Bias sampling against one protected group | 2/30 (6.7%, [1.8%, 21.3%]) | 9/30 (30.0%, [16.7%, 47.9%]) | **Baseline** |
+| `noop` | Retrain with a different seed (should PASS) | 0/30 (0.0% FP, [0.0%, 11.4%]) | 0/30 (0.0% FP, [0.0%, 11.4%]) | **ModelGate** |
 
 ## Methodology
 
-### Fault Injection
+Each fault is injected 30 times with different random seeds. ModelGate executes data contract, drift, slice regression, behavioral, performance budgets, and fairness checks. Confidence intervals are calculated using the Wilson score interval at 95% confidence level.
 
-| Fault | Injection Technique |
-|-------|---------------------|
-| `feature_leakage` | Add `leaked = 0.9·target + ε` column to training data |
-| `label_shift` | Flip 40% of labels in the `North` region subgroup |
-| `degraded_slice` | Drop 90% of `North` region rows from training data |
-| `schema_drift` | Divide `income` by 1000 (unit change) |
-| `latency_regression` | Replace GBM with RandomForest(500 trees, depth=20) |
-| `fairness_regression` | Flip 30% of `female` non-default labels to default |
-| `noop` | Retrain identical pipeline with a different random seed |
+The accuracy-only baseline fails only if overall accuracy drops more than 1 percentage point (|acc_champ - acc_cand| > 0.01).
 
-### Checks Run per Trial
-
-**ModelGate** runs three checks on every trial:
-
-1. **Drift** (PSI): flags `warn` ≥ 0.10, `fail` ≥ 0.25 on any feature.
-2. **Slice Regression** (bootstrap CI, n=50): flags if per-slice F1 drops
-   > 0.03 with 95% confidence on `region` or `gender` slices.
-3. **Fairness** (demographic parity diff on `gender`): `warn` ≥ 0.05, `fail` ≥ 0.10.
-4. **Budgets** (p95 latency ≤ 10 ms): checked only for `latency_regression`.
-
-**Baseline** detects a fault only when |champion_acc − candidate_acc| > 0.01.
-
-### Verdict
-
-A ModelGate trial is counted as *detected* when the overall verdict is `warn` or `fail`.
-For the `noop` control, lower detection rates are better (fewer false positives).
-
-### Reproducibility
-
-```bash
-# Re-run the benchmark (requires the virtual environment)
-modelgate bench
-# Results are written to docs/benchmark_results.json and docs/benchmark.md
-```
+For the `noop` control (retraining with a different seed), lower detection rates represent fewer false positives.

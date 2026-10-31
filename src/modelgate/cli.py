@@ -204,7 +204,8 @@ def run(
         verdict,
         candidate_sha=load_result.lineage.git_sha,
         seed=cfg.seed,
-        data_hash=next(iter(load_result.lineage.data_hashes.values()), ""),
+        data_hash=load_result.lineage.dvc_hash
+        or next(iter(load_result.lineage.data_hashes.values()), ""),
     )
 
     # Save reports

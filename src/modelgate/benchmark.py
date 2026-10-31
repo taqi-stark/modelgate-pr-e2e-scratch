@@ -75,7 +75,7 @@ def _generate_data(seed: int = 42, n: int = 3000) -> tuple[pd.DataFrame, pd.Data
 
 def _train_model(X: pd.DataFrame, y: pd.Series, seed: int) -> Pipeline:
     """Train a gradient boosting pipeline."""
-    cat_cols = X.select_dtypes(include=["object"]).columns.tolist()
+    cat_cols = X.select_dtypes(include=["object", "string"]).columns.tolist()
     num_cols = [c for c in X.columns if c not in cat_cols]
     preprocessor = ColumnTransformer(
         transformers=[
@@ -99,7 +99,7 @@ def _train_model(X: pd.DataFrame, y: pd.Series, seed: int) -> Pipeline:
 
 def _train_latency_model(X: pd.DataFrame, y: pd.Series, seed: int) -> Pipeline:
     """Train a large random forest pipeline with high latency."""
-    cat_cols = X.select_dtypes(include=["object"]).columns.tolist()
+    cat_cols = X.select_dtypes(include=["object", "string"]).columns.tolist()
     num_cols = [c for c in X.columns if c not in cat_cols]
     preprocessor = ColumnTransformer(
         transformers=[
@@ -201,14 +201,20 @@ def run_single_trial(
     X_faulty = faulty_train.drop(columns=["default"])
     y_faulty = faulty_train["default"]
 
+    cand_seed = seed + 500 if fault_type == "noop" else seed
     if model_override == "large_model":
-        candidate = _train_latency_model(X_faulty, y_faulty, seed=seed)
+        candidate = _train_latency_model(X_faulty, y_faulty, seed=cand_seed)
     else:
-        candidate = _train_model(X_faulty, y_faulty, seed=seed)
+        candidate = _train_model(X_faulty, y_faulty, seed=cand_seed)
 
     # Prepare test data
-    X_test = test_df.drop(columns=["default"])
-    y_test = test_df["default"]
+    test_eval = test_df.copy()
+    if fault_type == "feature_leakage":
+        test_rng = np.random.RandomState(seed + 1000)
+        test_eval["leaked"] = test_eval["default"] * 0.9 + test_rng.normal(0, 0.1, len(test_eval))
+
+    X_test = test_eval.drop(columns=["default"])
+    y_test = test_eval["default"]
 
     # Predict
     champ_preds = champion.predict(X_test)
@@ -234,7 +240,7 @@ def run_single_trial(
 
     # Slice check
     slice_result = run_slices_check(
-        test_df,
+        test_eval,
         "default",
         champion,
         candidate,
@@ -253,7 +259,7 @@ def run_single_trial(
 
     # Fairness check
     fairness_result = run_fairness_check(
-        test_df,
+        test_eval,
         "default",
         candidate,
         champion,
@@ -271,7 +277,7 @@ def run_single_trial(
     # Budgets check
     if fault_type == "latency_regression":
         budget_result = run_budgets_check(
-            test_df,
+            test_eval,
             "default",
             candidate,
             champion,
@@ -292,6 +298,19 @@ def run_single_trial(
         "champion_acc": round(champ_acc, 4),
         "candidate_acc": round(cand_acc, 4),
     }
+
+
+def wilson_ci(k: int, n: int, z: float = 1.95996) -> tuple[float, float]:
+    """Compute Wilson score 95% confidence interval for a binomial proportion."""
+    if n == 0:
+        return 0.0, 0.0
+    p = k / n
+    denom = 1 + (z**2 / n)
+    center = p + (z**2 / (2 * n))
+    margin = z * np.sqrt((p * (1 - p) / n) + (z**2 / (4 * n**2)))
+    lower = max(0.0, (center - margin) / denom)
+    upper = min(1.0, (center + margin) / denom)
+    return float(lower), float(upper)
 
 
 def run_benchmark(console: Console, n_seeds: int = 30) -> dict[str, Any]:
@@ -339,12 +358,18 @@ def run_benchmark(console: Console, n_seeds: int = 30) -> dict[str, Any]:
         elapsed = time.time() - start
         mg_rate = mg_detected / n_seeds if n_seeds > 0 else 0
         bl_rate = bl_detected / n_seeds if n_seeds > 0 else 0
+        mg_ci = wilson_ci(mg_detected, n_seeds)
+        bl_ci = wilson_ci(bl_detected, n_seeds)
 
         summary[fault] = {
             "description": FAULT_DESCRIPTIONS[fault],
             "n_trials": n_seeds,
+            "mg_detected": mg_detected,
+            "bl_detected": bl_detected,
             "modelgate_detection_rate": round(mg_rate, 3),
             "baseline_detection_rate": round(bl_rate, 3),
+            "modelgate_ci_95": [round(mg_ci[0], 3), round(mg_ci[1], 3)],
+            "baseline_ci_95": [round(bl_ci[0], 3), round(bl_ci[1], 3)],
             "modelgate_wins": mg_rate > bl_rate,
         }
 
@@ -360,8 +385,8 @@ def run_benchmark(console: Console, n_seeds: int = 30) -> dict[str, Any]:
     table.add_column("Winner", justify="center")
 
     for fault, s in summary.items():
-        mg_str = f"{s['modelgate_detection_rate']:.0%}"
-        bl_str = f"{s['baseline_detection_rate']:.0%}"
+        mg_str = f"{s['mg_detected']}/{s['n_trials']} ({s['modelgate_detection_rate']:.0%})"
+        bl_str = f"{s['bl_detected']}/{s['n_trials']} ({s['baseline_detection_rate']:.0%})"
         winner = (
             "✅ MG"
             if s["modelgate_wins"]
@@ -374,8 +399,8 @@ def run_benchmark(console: Console, n_seeds: int = 30) -> dict[str, Any]:
 
         if fault == "noop":
             # For no-op, lower detection = better (false positives)
-            mg_str = f"{s['modelgate_detection_rate']:.0%} FP"
-            bl_str = f"{s['baseline_detection_rate']:.0%} FP"
+            mg_str = f"{s['mg_detected']}/{s['n_trials']} ({s['modelgate_detection_rate']:.0%} FP)"
+            bl_str = f"{s['bl_detected']}/{s['n_trials']} ({s['baseline_detection_rate']:.0%} FP)"
             winner = (
                 "✅ MG"
                 if s["modelgate_detection_rate"] <= s["baseline_detection_rate"]
@@ -408,43 +433,63 @@ def run_benchmark(console: Console, n_seeds: int = 30) -> dict[str, Any]:
 
 
 def _generate_benchmark_markdown(summary: dict, path: Path) -> None:
-    """Generate benchmark.md report."""
+    """Generate benchmark.md report with exact counts and Wilson 95% CIs."""
     lines = [
         "# ModelGate Benchmark Results",
         "",
         "Fault injection benchmark comparing ModelGate against an accuracy-only baseline.",
+        "Each fault type was evaluated across 30 independent seeds.",
         "",
         "## Detection Rates",
         "",
-        "| Fault | How to Inject | ModelGate | Baseline (Acc-only) | Winner |",
-        "|-------|--------------|-----------|---------------------|--------|",
+        "| Fault | Injected Defect | ModelGate (Count, Rate, Wilson 95% CI) | Baseline (Count, Rate, Wilson 95% CI) | Winner |",
+        "|-------|-----------------|----------------------------------------|---------------------------------------|--------|",
     ]
 
     for fault, s in summary.items():
-        mg = f"{s['modelgate_detection_rate']:.0%}"
-        bl = f"{s['baseline_detection_rate']:.0%}"
+        n = s["n_trials"]
+        mg_k = s["mg_detected"]
+        bl_k = s["bl_detected"]
+        mg_ci = s["modelgate_ci_95"]
+        bl_ci = s["baseline_ci_95"]
+
         if fault == "noop":
+            mg_cell = f"{mg_k}/{n} ({s['modelgate_detection_rate']:.1%} FP, [{mg_ci[0]:.1%}, {mg_ci[1]:.1%}])"
+            bl_cell = f"{bl_k}/{n} ({s['baseline_detection_rate']:.1%} FP, [{bl_ci[0]:.1%}, {bl_ci[1]:.1%}])"
             winner = (
-                "MG"
+                "ModelGate"
                 if s["modelgate_detection_rate"] <= s["baseline_detection_rate"]
                 else "Baseline"
             )
-            mg += " (FP rate)"
-            bl += " (FP rate)"
         else:
-            winner = "ModelGate" if s["modelgate_wins"] else "Baseline"
-        lines.append(f"| {fault} | {s['description']} | {mg} | {bl} | {winner} |")
+            mg_cell = f"{mg_k}/{n} ({s['modelgate_detection_rate']:.1%}, [{mg_ci[0]:.1%}, {mg_ci[1]:.1%}])"
+            bl_cell = (
+                f"{bl_k}/{n} ({s['baseline_detection_rate']:.1%}, [{bl_ci[0]:.1%}, {bl_ci[1]:.1%}])"
+            )
+            winner = (
+                "ModelGate"
+                if s["modelgate_wins"]
+                else (
+                    "Tie"
+                    if s["modelgate_detection_rate"] == s["baseline_detection_rate"]
+                    else "Baseline"
+                )
+            )
+
+        lines.append(f"| `{fault}` | {s['description']} | {mg_cell} | {bl_cell} | **{winner}** |")
 
     lines.extend(
         [
             "",
             "## Methodology",
             "",
-            "Each fault is injected 30 times with different seeds. "
-            "ModelGate runs drift, slice regression, and fairness checks. "
-            "The accuracy-only baseline fails only if overall accuracy drops more than 1 percentage point.",
+            "Each fault is injected 30 times with different random seeds. "
+            "ModelGate executes data contract, drift, slice regression, behavioral, performance budgets, and fairness checks. "
+            "Confidence intervals are calculated using the Wilson score interval at 95% confidence level.",
             "",
-            "For the no-op change (retrain with a different seed), lower rates are better as they represent false positives.",
+            "The accuracy-only baseline fails only if overall accuracy drops more than 1 percentage point (|acc_champ - acc_cand| > 0.01).",
+            "",
+            "For the `noop` control (retraining with a different seed), lower detection rates represent fewer false positives.",
         ]
     )
 

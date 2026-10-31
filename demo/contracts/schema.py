@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-import pandera as pa
-from pandera import Column, Check, DataFrameSchema
+import pandera.pandas as pa
+from pandera.pandas import Check, Column, DataFrameSchema
 
 schema = DataFrameSchema(
     {

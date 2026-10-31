@@ -11,7 +11,11 @@ import time
 from typing import Any
 
 import pandas as pd
-from pandera import DataFrameSchema
+
+try:
+    from pandera.pandas import DataFrameSchema
+except ImportError:
+    from pandera import DataFrameSchema  # type: ignore[no-redef]
 
 from modelgate.config import DataContractConfig
 from modelgate.verdict import CheckResult

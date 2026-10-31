@@ -350,7 +350,9 @@ def list_models(
 ) -> list[dict]:
     """Registry view with champion marked."""
     with Session(engine) as session:
-        query = select(Run).where(col(Run.status).in_(["pass", "warn"])).order_by(col(Run.id).desc())
+        query = (
+            select(Run).where(col(Run.status).in_(["pass", "warn"])).order_by(col(Run.id).desc())
+        )
         if project:
             query = query.where(Run.project == project)
         runs = session.exec(query.limit(50)).all()
@@ -386,7 +388,9 @@ def get_settings(project: str = Query("default")) -> dict:
 
 
 @app.put("/settings")
-def update_settings(project: str = Query("default"), req: SettingsUpdateRequest = Body(...)) -> dict:
+def update_settings(
+    project: str = Query("default"), req: SettingsUpdateRequest = Body(...)
+) -> dict:
     """Update settings."""
     with Session(engine) as session:
         settings = session.exec(select(Settings).where(Settings.project == project)).first()

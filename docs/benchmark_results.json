@@ -2,76 +2,128 @@
   "summary": {
     "feature_leakage": {
       "description": "Add a column derived from the target",
+      "n_trials": 30,
+      "mg_detected": 30,
+      "bl_detected": 30,
       "modelgate_detection_rate": 1.0,
       "baseline_detection_rate": 1.0,
-      "modelgate_wins": false,
-      "n_trials": 30
+      "modelgate_ci_95": [
+        0.886,
+        1.0
+      ],
+      "baseline_ci_95": [
+        0.886,
+        1.0
+      ],
+      "modelgate_wins": false
     },
     "label_shift": {
       "description": "Corrupt labels in one subgroup of the train set",
-      "modelgate_detection_rate": 0.9333333333333333,
-      "baseline_detection_rate": 0.9333333333333333,
-      "modelgate_wins": false,
-      "n_trials": 30
+      "n_trials": 30,
+      "mg_detected": 28,
+      "bl_detected": 28,
+      "modelgate_detection_rate": 0.933,
+      "baseline_detection_rate": 0.933,
+      "modelgate_ci_95": [
+        0.787,
+        0.982
+      ],
+      "baseline_ci_95": [
+        0.787,
+        0.982
+      ],
+      "modelgate_wins": false
     },
     "degraded_slice": {
-      "description": "Remove 90% of one subgroup from training data",
+      "description": "Remove most of one subgroup from training data",
+      "n_trials": 30,
+      "mg_detected": 30,
+      "bl_detected": 0,
       "modelgate_detection_rate": 1.0,
-      "baseline_detection_rate": 0.03333333333333333,
-      "modelgate_wins": true,
-      "n_trials": 30
+      "baseline_detection_rate": 0.0,
+      "modelgate_ci_95": [
+        0.886,
+        1.0
+      ],
+      "baseline_ci_95": [
+        0.0,
+        0.114
+      ],
+      "modelgate_wins": true
     },
     "schema_drift": {
       "description": "Change a column's scale or unit",
+      "n_trials": 30,
+      "mg_detected": 30,
+      "bl_detected": 17,
       "modelgate_detection_rate": 1.0,
-      "baseline_detection_rate": 0.4,
-      "modelgate_wins": true,
-      "n_trials": 30
+      "baseline_detection_rate": 0.567,
+      "modelgate_ci_95": [
+        0.886,
+        1.0
+      ],
+      "baseline_ci_95": [
+        0.392,
+        0.726
+      ],
+      "modelgate_wins": true
     },
     "latency_regression": {
-      "description": "Swap in a much larger slow model",
+      "description": "Swap in a much larger model",
+      "n_trials": 30,
+      "mg_detected": 30,
+      "bl_detected": 0,
       "modelgate_detection_rate": 1.0,
       "baseline_detection_rate": 0.0,
-      "modelgate_wins": true,
-      "n_trials": 30
+      "modelgate_ci_95": [
+        0.886,
+        1.0
+      ],
+      "baseline_ci_95": [
+        0.0,
+        0.114
+      ],
+      "modelgate_wins": true
     },
     "fairness_regression": {
       "description": "Bias sampling against one protected group",
-      "modelgate_detection_rate": 0.43333333333333335,
-      "baseline_detection_rate": 0.7666666666666667,
-      "modelgate_wins": false,
-      "n_trials": 30
+      "n_trials": 30,
+      "mg_detected": 2,
+      "bl_detected": 9,
+      "modelgate_detection_rate": 0.067,
+      "baseline_detection_rate": 0.3,
+      "modelgate_ci_95": [
+        0.018,
+        0.213
+      ],
+      "baseline_ci_95": [
+        0.167,
+        0.479
+      ],
+      "modelgate_wins": false
     },
     "noop": {
       "description": "Retrain with a different seed (should PASS)",
+      "n_trials": 30,
+      "mg_detected": 0,
+      "bl_detected": 0,
       "modelgate_detection_rate": 0.0,
       "baseline_detection_rate": 0.0,
-      "modelgate_wins": true,
-      "n_trials": 30
+      "modelgate_ci_95": [
+        0.0,
+        0.114
+      ],
+      "baseline_ci_95": [
+        0.0,
+        0.114
+      ],
+      "modelgate_wins": false
     }
   },
   "details": [
     {
       "fault_type": "feature_leakage",
-      "seed": 42,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": true,
-      "champion_acc": 0.909,
-      "candidate_acc": 1.0
-    },
-    {
-      "fault_type": "feature_leakage",
-      "seed": 43,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": true,
-      "champion_acc": 0.911,
-      "candidate_acc": 1.0
-    },
-    {
-      "fault_type": "feature_leakage",
-      "seed": 44,
+      "seed": 1000,
       "modelgate_detected": true,
       "modelgate_status": "fail",
       "baseline_detected": true,
@@ -80,88 +132,34 @@
     },
     {
       "fault_type": "feature_leakage",
-      "seed": 45,
+      "seed": 1001,
       "modelgate_detected": true,
       "modelgate_status": "fail",
       "baseline_detected": true,
-      "champion_acc": 0.923,
+      "champion_acc": 0.91,
       "candidate_acc": 1.0
     },
     {
       "fault_type": "feature_leakage",
-      "seed": 46,
+      "seed": 1002,
       "modelgate_detected": true,
       "modelgate_status": "fail",
       "baseline_detected": true,
-      "champion_acc": 0.886,
+      "champion_acc": 0.9187,
       "candidate_acc": 1.0
     },
     {
       "fault_type": "feature_leakage",
-      "seed": 47,
+      "seed": 1003,
       "modelgate_detected": true,
       "modelgate_status": "fail",
       "baseline_detected": true,
-      "champion_acc": 0.905,
+      "champion_acc": 0.912,
       "candidate_acc": 1.0
     },
     {
       "fault_type": "feature_leakage",
-      "seed": 48,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": true,
-      "champion_acc": 0.918,
-      "candidate_acc": 1.0
-    },
-    {
-      "fault_type": "feature_leakage",
-      "seed": 49,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": true,
-      "champion_acc": 0.906,
-      "candidate_acc": 1.0
-    },
-    {
-      "fault_type": "feature_leakage",
-      "seed": 50,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": true,
-      "champion_acc": 0.902,
-      "candidate_acc": 1.0
-    },
-    {
-      "fault_type": "feature_leakage",
-      "seed": 51,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": true,
-      "champion_acc": 0.927,
-      "candidate_acc": 1.0
-    },
-    {
-      "fault_type": "feature_leakage",
-      "seed": 52,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": true,
-      "champion_acc": 0.888,
-      "candidate_acc": 1.0
-    },
-    {
-      "fault_type": "feature_leakage",
-      "seed": 53,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": true,
-      "champion_acc": 0.906,
-      "candidate_acc": 1.0
-    },
-    {
-      "fault_type": "feature_leakage",
-      "seed": 54,
+      "seed": 1004,
       "modelgate_detected": true,
       "modelgate_status": "fail",
       "baseline_detected": true,
@@ -170,88 +168,52 @@
     },
     {
       "fault_type": "feature_leakage",
-      "seed": 55,
+      "seed": 1005,
       "modelgate_detected": true,
       "modelgate_status": "fail",
       "baseline_detected": true,
-      "champion_acc": 0.92,
+      "champion_acc": 0.9067,
       "candidate_acc": 1.0
     },
     {
       "fault_type": "feature_leakage",
-      "seed": 56,
+      "seed": 1006,
       "modelgate_detected": true,
       "modelgate_status": "fail",
       "baseline_detected": true,
-      "champion_acc": 0.893,
+      "champion_acc": 0.9127,
       "candidate_acc": 1.0
     },
     {
       "fault_type": "feature_leakage",
-      "seed": 57,
+      "seed": 1007,
       "modelgate_detected": true,
       "modelgate_status": "fail",
       "baseline_detected": true,
-      "champion_acc": 0.892,
+      "champion_acc": 0.908,
       "candidate_acc": 1.0
     },
     {
       "fault_type": "feature_leakage",
-      "seed": 58,
+      "seed": 1008,
       "modelgate_detected": true,
       "modelgate_status": "fail",
       "baseline_detected": true,
-      "champion_acc": 0.909,
+      "champion_acc": 0.908,
       "candidate_acc": 1.0
     },
     {
       "fault_type": "feature_leakage",
-      "seed": 59,
+      "seed": 1009,
       "modelgate_detected": true,
       "modelgate_status": "fail",
       "baseline_detected": true,
-      "champion_acc": 0.911,
+      "champion_acc": 0.896,
       "candidate_acc": 1.0
     },
     {
       "fault_type": "feature_leakage",
-      "seed": 60,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": true,
-      "champion_acc": 0.89,
-      "candidate_acc": 1.0
-    },
-    {
-      "fault_type": "feature_leakage",
-      "seed": 61,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": true,
-      "champion_acc": 0.899,
-      "candidate_acc": 1.0
-    },
-    {
-      "fault_type": "feature_leakage",
-      "seed": 62,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": true,
-      "champion_acc": 0.923,
-      "candidate_acc": 1.0
-    },
-    {
-      "fault_type": "feature_leakage",
-      "seed": 63,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": true,
-      "champion_acc": 0.906,
-      "candidate_acc": 1.0
-    },
-    {
-      "fault_type": "feature_leakage",
-      "seed": 64,
+      "seed": 1010,
       "modelgate_detected": true,
       "modelgate_status": "fail",
       "baseline_detected": true,
@@ -260,43 +222,70 @@
     },
     {
       "fault_type": "feature_leakage",
-      "seed": 65,
+      "seed": 1011,
       "modelgate_detected": true,
       "modelgate_status": "fail",
       "baseline_detected": true,
-      "champion_acc": 0.914,
+      "champion_acc": 0.8993,
       "candidate_acc": 1.0
     },
     {
       "fault_type": "feature_leakage",
-      "seed": 66,
+      "seed": 1012,
       "modelgate_detected": true,
       "modelgate_status": "fail",
       "baseline_detected": true,
-      "champion_acc": 0.905,
+      "champion_acc": 0.916,
       "candidate_acc": 1.0
     },
     {
       "fault_type": "feature_leakage",
-      "seed": 67,
+      "seed": 1013,
       "modelgate_detected": true,
       "modelgate_status": "fail",
       "baseline_detected": true,
-      "champion_acc": 0.911,
+      "champion_acc": 0.9027,
       "candidate_acc": 1.0
     },
     {
       "fault_type": "feature_leakage",
-      "seed": 68,
+      "seed": 1014,
       "modelgate_detected": true,
       "modelgate_status": "fail",
       "baseline_detected": true,
-      "champion_acc": 0.911,
+      "champion_acc": 0.904,
       "candidate_acc": 1.0
     },
     {
       "fault_type": "feature_leakage",
-      "seed": 69,
+      "seed": 1015,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.8993,
+      "candidate_acc": 1.0
+    },
+    {
+      "fault_type": "feature_leakage",
+      "seed": 1016,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.9,
+      "candidate_acc": 1.0
+    },
+    {
+      "fault_type": "feature_leakage",
+      "seed": 1017,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.9093,
+      "candidate_acc": 1.0
+    },
+    {
+      "fault_type": "feature_leakage",
+      "seed": 1018,
       "modelgate_detected": true,
       "modelgate_status": "fail",
       "baseline_detected": true,
@@ -305,1366 +294,1366 @@
     },
     {
       "fault_type": "feature_leakage",
-      "seed": 70,
+      "seed": 1019,
       "modelgate_detected": true,
       "modelgate_status": "fail",
       "baseline_detected": true,
-      "champion_acc": 0.925,
+      "champion_acc": 0.9007,
+      "candidate_acc": 0.9993
+    },
+    {
+      "fault_type": "feature_leakage",
+      "seed": 1020,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.908,
       "candidate_acc": 1.0
     },
     {
       "fault_type": "feature_leakage",
-      "seed": 71,
+      "seed": 1021,
       "modelgate_detected": true,
       "modelgate_status": "fail",
       "baseline_detected": true,
-      "champion_acc": 0.908,
+      "champion_acc": 0.8993,
+      "candidate_acc": 1.0
+    },
+    {
+      "fault_type": "feature_leakage",
+      "seed": 1022,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.8967,
+      "candidate_acc": 1.0
+    },
+    {
+      "fault_type": "feature_leakage",
+      "seed": 1023,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.9033,
+      "candidate_acc": 1.0
+    },
+    {
+      "fault_type": "feature_leakage",
+      "seed": 1024,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.898,
+      "candidate_acc": 1.0
+    },
+    {
+      "fault_type": "feature_leakage",
+      "seed": 1025,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.9033,
+      "candidate_acc": 1.0
+    },
+    {
+      "fault_type": "feature_leakage",
+      "seed": 1026,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.9073,
+      "candidate_acc": 1.0
+    },
+    {
+      "fault_type": "feature_leakage",
+      "seed": 1027,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.9067,
+      "candidate_acc": 1.0
+    },
+    {
+      "fault_type": "feature_leakage",
+      "seed": 1028,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.9047,
+      "candidate_acc": 1.0
+    },
+    {
+      "fault_type": "feature_leakage",
+      "seed": 1029,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.9253,
       "candidate_acc": 1.0
     },
     {
       "fault_type": "label_shift",
-      "seed": 42,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": true,
-      "champion_acc": 0.909,
-      "candidate_acc": 0.863
-    },
-    {
-      "fault_type": "label_shift",
-      "seed": 43,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": true,
-      "champion_acc": 0.911,
-      "candidate_acc": 0.891
-    },
-    {
-      "fault_type": "label_shift",
-      "seed": 44,
+      "seed": 1000,
       "modelgate_detected": true,
       "modelgate_status": "fail",
       "baseline_detected": true,
       "champion_acc": 0.908,
-      "candidate_acc": 0.881
+      "candidate_acc": 0.886
     },
     {
       "fault_type": "label_shift",
-      "seed": 45,
+      "seed": 1001,
       "modelgate_detected": true,
       "modelgate_status": "fail",
       "baseline_detected": true,
-      "champion_acc": 0.923,
+      "champion_acc": 0.91,
+      "candidate_acc": 0.886
+    },
+    {
+      "fault_type": "label_shift",
+      "seed": 1002,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.9187,
+      "candidate_acc": 0.9087
+    },
+    {
+      "fault_type": "label_shift",
+      "seed": 1003,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": true,
+      "champion_acc": 0.912,
       "candidate_acc": 0.902
     },
     {
       "fault_type": "label_shift",
-      "seed": 46,
+      "seed": 1004,
       "modelgate_detected": true,
       "modelgate_status": "fail",
       "baseline_detected": true,
-      "champion_acc": 0.886,
-      "candidate_acc": 0.864
+      "champion_acc": 0.918,
+      "candidate_acc": 0.898
     },
     {
       "fault_type": "label_shift",
-      "seed": 47,
-      "modelgate_detected": false,
-      "modelgate_status": "pass",
-      "baseline_detected": false,
-      "champion_acc": 0.905,
+      "seed": 1005,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.9067,
       "candidate_acc": 0.896
     },
     {
       "fault_type": "label_shift",
-      "seed": 48,
+      "seed": 1006,
       "modelgate_detected": true,
       "modelgate_status": "fail",
       "baseline_detected": true,
-      "champion_acc": 0.918,
-      "candidate_acc": 0.878
+      "champion_acc": 0.9127,
+      "candidate_acc": 0.8993
     },
     {
       "fault_type": "label_shift",
-      "seed": 49,
+      "seed": 1007,
       "modelgate_detected": true,
       "modelgate_status": "fail",
       "baseline_detected": true,
-      "champion_acc": 0.906,
-      "candidate_acc": 0.864
-    },
-    {
-      "fault_type": "label_shift",
-      "seed": 50,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": true,
-      "champion_acc": 0.902,
-      "candidate_acc": 0.869
-    },
-    {
-      "fault_type": "label_shift",
-      "seed": 51,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": true,
-      "champion_acc": 0.927,
-      "candidate_acc": 0.91
-    },
-    {
-      "fault_type": "label_shift",
-      "seed": 52,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": true,
-      "champion_acc": 0.888,
-      "candidate_acc": 0.878
-    },
-    {
-      "fault_type": "label_shift",
-      "seed": 53,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": true,
-      "champion_acc": 0.906,
-      "candidate_acc": 0.866
-    },
-    {
-      "fault_type": "label_shift",
-      "seed": 54,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": true,
-      "champion_acc": 0.918,
-      "candidate_acc": 0.867
-    },
-    {
-      "fault_type": "label_shift",
-      "seed": 55,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": true,
-      "champion_acc": 0.92,
-      "candidate_acc": 0.908
-    },
-    {
-      "fault_type": "label_shift",
-      "seed": 56,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": true,
-      "champion_acc": 0.893,
-      "candidate_acc": 0.866
-    },
-    {
-      "fault_type": "label_shift",
-      "seed": 57,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": true,
-      "champion_acc": 0.892,
-      "candidate_acc": 0.842
-    },
-    {
-      "fault_type": "label_shift",
-      "seed": 58,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": true,
-      "champion_acc": 0.909,
-      "candidate_acc": 0.874
-    },
-    {
-      "fault_type": "label_shift",
-      "seed": 59,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": true,
-      "champion_acc": 0.911,
-      "candidate_acc": 0.888
-    },
-    {
-      "fault_type": "label_shift",
-      "seed": 60,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": true,
-      "champion_acc": 0.89,
-      "candidate_acc": 0.867
-    },
-    {
-      "fault_type": "label_shift",
-      "seed": 61,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": true,
-      "champion_acc": 0.899,
-      "candidate_acc": 0.874
-    },
-    {
-      "fault_type": "label_shift",
-      "seed": 62,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": true,
-      "champion_acc": 0.923,
-      "candidate_acc": 0.9
-    },
-    {
-      "fault_type": "label_shift",
-      "seed": 63,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": true,
-      "champion_acc": 0.906,
-      "candidate_acc": 0.859
-    },
-    {
-      "fault_type": "label_shift",
-      "seed": 64,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": true,
-      "champion_acc": 0.904,
-      "candidate_acc": 0.888
-    },
-    {
-      "fault_type": "label_shift",
-      "seed": 65,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": true,
-      "champion_acc": 0.914,
-      "candidate_acc": 0.897
-    },
-    {
-      "fault_type": "label_shift",
-      "seed": 66,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": true,
-      "champion_acc": 0.905,
-      "candidate_acc": 0.874
-    },
-    {
-      "fault_type": "label_shift",
-      "seed": 67,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": true,
-      "champion_acc": 0.911,
-      "candidate_acc": 0.878
-    },
-    {
-      "fault_type": "label_shift",
-      "seed": 68,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": true,
-      "champion_acc": 0.911,
+      "champion_acc": 0.908,
       "candidate_acc": 0.894
     },
     {
       "fault_type": "label_shift",
-      "seed": 69,
+      "seed": 1008,
       "modelgate_detected": false,
       "modelgate_status": "pass",
       "baseline_detected": false,
-      "champion_acc": 0.906,
-      "candidate_acc": 0.898
-    },
-    {
-      "fault_type": "label_shift",
-      "seed": 70,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": true,
-      "champion_acc": 0.925,
-      "candidate_acc": 0.902
-    },
-    {
-      "fault_type": "label_shift",
-      "seed": 71,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": true,
       "champion_acc": 0.908,
-      "candidate_acc": 0.884
-    },
-    {
-      "fault_type": "degraded_slice",
-      "seed": 42,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": false,
-      "champion_acc": 0.909,
-      "candidate_acc": 0.914
-    },
-    {
-      "fault_type": "degraded_slice",
-      "seed": 43,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": false,
-      "champion_acc": 0.911,
-      "candidate_acc": 0.903
-    },
-    {
-      "fault_type": "degraded_slice",
-      "seed": 44,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": false,
-      "champion_acc": 0.908,
-      "candidate_acc": 0.907
-    },
-    {
-      "fault_type": "degraded_slice",
-      "seed": 45,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": false,
-      "champion_acc": 0.923,
-      "candidate_acc": 0.921
-    },
-    {
-      "fault_type": "degraded_slice",
-      "seed": 46,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": false,
-      "champion_acc": 0.886,
-      "candidate_acc": 0.885
-    },
-    {
-      "fault_type": "degraded_slice",
-      "seed": 47,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": false,
-      "champion_acc": 0.905,
-      "candidate_acc": 0.906
-    },
-    {
-      "fault_type": "degraded_slice",
-      "seed": 48,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": false,
-      "champion_acc": 0.918,
-      "candidate_acc": 0.915
-    },
-    {
-      "fault_type": "degraded_slice",
-      "seed": 49,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": false,
-      "champion_acc": 0.906,
-      "candidate_acc": 0.904
-    },
-    {
-      "fault_type": "degraded_slice",
-      "seed": 50,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": false,
-      "champion_acc": 0.902,
-      "candidate_acc": 0.902
-    },
-    {
-      "fault_type": "degraded_slice",
-      "seed": 51,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": false,
-      "champion_acc": 0.927,
-      "candidate_acc": 0.928
-    },
-    {
-      "fault_type": "degraded_slice",
-      "seed": 52,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": false,
-      "champion_acc": 0.888,
-      "candidate_acc": 0.888
-    },
-    {
-      "fault_type": "degraded_slice",
-      "seed": 53,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": false,
-      "champion_acc": 0.906,
-      "candidate_acc": 0.903
-    },
-    {
-      "fault_type": "degraded_slice",
-      "seed": 54,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": false,
-      "champion_acc": 0.918,
-      "candidate_acc": 0.918
-    },
-    {
-      "fault_type": "degraded_slice",
-      "seed": 55,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": false,
-      "champion_acc": 0.92,
-      "candidate_acc": 0.92
-    },
-    {
-      "fault_type": "degraded_slice",
-      "seed": 56,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": false,
-      "champion_acc": 0.893,
-      "candidate_acc": 0.892
-    },
-    {
-      "fault_type": "degraded_slice",
-      "seed": 57,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": false,
-      "champion_acc": 0.892,
-      "candidate_acc": 0.886
-    },
-    {
-      "fault_type": "degraded_slice",
-      "seed": 58,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": false,
-      "champion_acc": 0.909,
-      "candidate_acc": 0.903
-    },
-    {
-      "fault_type": "degraded_slice",
-      "seed": 59,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": false,
-      "champion_acc": 0.911,
-      "candidate_acc": 0.91
-    },
-    {
-      "fault_type": "degraded_slice",
-      "seed": 60,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": false,
-      "champion_acc": 0.89,
-      "candidate_acc": 0.887
-    },
-    {
-      "fault_type": "degraded_slice",
-      "seed": 61,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": false,
-      "champion_acc": 0.899,
-      "candidate_acc": 0.896
-    },
-    {
-      "fault_type": "degraded_slice",
-      "seed": 62,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": false,
-      "champion_acc": 0.923,
-      "candidate_acc": 0.925
-    },
-    {
-      "fault_type": "degraded_slice",
-      "seed": 63,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": false,
-      "champion_acc": 0.906,
-      "candidate_acc": 0.907
-    },
-    {
-      "fault_type": "degraded_slice",
-      "seed": 64,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": false,
-      "champion_acc": 0.904,
-      "candidate_acc": 0.905
-    },
-    {
-      "fault_type": "degraded_slice",
-      "seed": 65,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": false,
-      "champion_acc": 0.914,
-      "candidate_acc": 0.914
-    },
-    {
-      "fault_type": "degraded_slice",
-      "seed": 66,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": false,
-      "champion_acc": 0.905,
       "candidate_acc": 0.9
     },
     {
-      "fault_type": "degraded_slice",
-      "seed": 67,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": false,
-      "champion_acc": 0.911,
-      "candidate_acc": 0.911
-    },
-    {
-      "fault_type": "degraded_slice",
-      "seed": 68,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": false,
-      "champion_acc": 0.911,
-      "candidate_acc": 0.909
-    },
-    {
-      "fault_type": "degraded_slice",
-      "seed": 69,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": false,
-      "champion_acc": 0.906,
-      "candidate_acc": 0.903
-    },
-    {
-      "fault_type": "degraded_slice",
-      "seed": 70,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": false,
-      "champion_acc": 0.925,
-      "candidate_acc": 0.921
-    },
-    {
-      "fault_type": "degraded_slice",
-      "seed": 71,
+      "fault_type": "label_shift",
+      "seed": 1009,
       "modelgate_detected": true,
       "modelgate_status": "fail",
       "baseline_detected": true,
-      "champion_acc": 0.908,
-      "candidate_acc": 0.898
-    },
-    {
-      "fault_type": "schema_drift",
-      "seed": 42,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": false,
-      "champion_acc": 0.909,
-      "candidate_acc": 0.91
-    },
-    {
-      "fault_type": "schema_drift",
-      "seed": 43,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": true,
-      "champion_acc": 0.911,
+      "champion_acc": 0.896,
       "candidate_acc": 0.87
     },
     {
-      "fault_type": "schema_drift",
-      "seed": 44,
+      "fault_type": "label_shift",
+      "seed": 1010,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.904,
+      "candidate_acc": 0.8747
+    },
+    {
+      "fault_type": "label_shift",
+      "seed": 1011,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.8993,
+      "candidate_acc": 0.864
+    },
+    {
+      "fault_type": "label_shift",
+      "seed": 1012,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.916,
+      "candidate_acc": 0.8893
+    },
+    {
+      "fault_type": "label_shift",
+      "seed": 1013,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.9027,
+      "candidate_acc": 0.888
+    },
+    {
+      "fault_type": "label_shift",
+      "seed": 1014,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.904,
+      "candidate_acc": 0.8747
+    },
+    {
+      "fault_type": "label_shift",
+      "seed": 1015,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.8993,
+      "candidate_acc": 0.8807
+    },
+    {
+      "fault_type": "label_shift",
+      "seed": 1016,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.9,
+      "candidate_acc": 0.882
+    },
+    {
+      "fault_type": "label_shift",
+      "seed": 1017,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.9093,
+      "candidate_acc": 0.8893
+    },
+    {
+      "fault_type": "label_shift",
+      "seed": 1018,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.906,
+      "candidate_acc": 0.8767
+    },
+    {
+      "fault_type": "label_shift",
+      "seed": 1019,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.9007,
+      "candidate_acc": 0.8767
+    },
+    {
+      "fault_type": "label_shift",
+      "seed": 1020,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.908,
+      "candidate_acc": 0.8773
+    },
+    {
+      "fault_type": "label_shift",
+      "seed": 1021,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.8993,
+      "candidate_acc": 0.8707
+    },
+    {
+      "fault_type": "label_shift",
+      "seed": 1022,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.8967,
+      "candidate_acc": 0.87
+    },
+    {
+      "fault_type": "label_shift",
+      "seed": 1023,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.9033,
+      "candidate_acc": 0.8847
+    },
+    {
+      "fault_type": "label_shift",
+      "seed": 1024,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.898,
+      "candidate_acc": 0.874
+    },
+    {
+      "fault_type": "label_shift",
+      "seed": 1025,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.9033,
+      "candidate_acc": 0.894
+    },
+    {
+      "fault_type": "label_shift",
+      "seed": 1026,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.9073,
+      "candidate_acc": 0.8873
+    },
+    {
+      "fault_type": "label_shift",
+      "seed": 1027,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.9067,
+      "candidate_acc": 0.8927
+    },
+    {
+      "fault_type": "label_shift",
+      "seed": 1028,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.9047,
+      "candidate_acc": 0.8907
+    },
+    {
+      "fault_type": "label_shift",
+      "seed": 1029,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.9253,
+      "candidate_acc": 0.9113
+    },
+    {
+      "fault_type": "degraded_slice",
+      "seed": 1000,
       "modelgate_detected": true,
       "modelgate_status": "fail",
       "baseline_detected": false,
       "champion_acc": 0.908,
-      "candidate_acc": 0.901
-    },
-    {
-      "fault_type": "schema_drift",
-      "seed": 45,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": true,
-      "champion_acc": 0.923,
-      "candidate_acc": 0.738
-    },
-    {
-      "fault_type": "schema_drift",
-      "seed": 46,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": true,
-      "champion_acc": 0.886,
-      "candidate_acc": 0.859
-    },
-    {
-      "fault_type": "schema_drift",
-      "seed": 47,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": true,
-      "champion_acc": 0.905,
-      "candidate_acc": 0.597
-    },
-    {
-      "fault_type": "schema_drift",
-      "seed": 48,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": false,
-      "champion_acc": 0.918,
-      "candidate_acc": 0.921
-    },
-    {
-      "fault_type": "schema_drift",
-      "seed": 49,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": false,
-      "champion_acc": 0.906,
       "candidate_acc": 0.908
     },
     {
-      "fault_type": "schema_drift",
-      "seed": 50,
+      "fault_type": "degraded_slice",
+      "seed": 1001,
       "modelgate_detected": true,
       "modelgate_status": "fail",
-      "baseline_detected": true,
-      "champion_acc": 0.902,
-      "candidate_acc": 0.876
+      "baseline_detected": false,
+      "champion_acc": 0.91,
+      "candidate_acc": 0.9093
     },
     {
-      "fault_type": "schema_drift",
-      "seed": 51,
+      "fault_type": "degraded_slice",
+      "seed": 1002,
       "modelgate_detected": true,
       "modelgate_status": "fail",
-      "baseline_detected": true,
-      "champion_acc": 0.927,
-      "candidate_acc": 0.098
+      "baseline_detected": false,
+      "champion_acc": 0.9187,
+      "candidate_acc": 0.9187
     },
     {
-      "fault_type": "schema_drift",
-      "seed": 52,
+      "fault_type": "degraded_slice",
+      "seed": 1003,
       "modelgate_detected": true,
       "modelgate_status": "fail",
-      "baseline_detected": true,
-      "champion_acc": 0.888,
-      "candidate_acc": 0.8
+      "baseline_detected": false,
+      "champion_acc": 0.912,
+      "candidate_acc": 0.912
     },
     {
-      "fault_type": "schema_drift",
-      "seed": 53,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": true,
-      "champion_acc": 0.906,
-      "candidate_acc": 0.893
-    },
-    {
-      "fault_type": "schema_drift",
-      "seed": 54,
+      "fault_type": "degraded_slice",
+      "seed": 1004,
       "modelgate_detected": true,
       "modelgate_status": "fail",
       "baseline_detected": false,
       "champion_acc": 0.918,
-      "candidate_acc": 0.92
+      "candidate_acc": 0.914
     },
     {
-      "fault_type": "schema_drift",
-      "seed": 55,
+      "fault_type": "degraded_slice",
+      "seed": 1005,
       "modelgate_detected": true,
       "modelgate_status": "fail",
       "baseline_detected": false,
-      "champion_acc": 0.92,
-      "candidate_acc": 0.913
-    },
-    {
-      "fault_type": "schema_drift",
-      "seed": 56,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": false,
-      "champion_acc": 0.893,
-      "candidate_acc": 0.895
-    },
-    {
-      "fault_type": "schema_drift",
-      "seed": 57,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": false,
-      "champion_acc": 0.892,
-      "candidate_acc": 0.89
-    },
-    {
-      "fault_type": "schema_drift",
-      "seed": 58,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": false,
-      "champion_acc": 0.909,
-      "candidate_acc": 0.909
-    },
-    {
-      "fault_type": "schema_drift",
-      "seed": 59,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": true,
-      "champion_acc": 0.911,
-      "candidate_acc": 0.866
-    },
-    {
-      "fault_type": "schema_drift",
-      "seed": 60,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": false,
-      "champion_acc": 0.89,
-      "candidate_acc": 0.887
-    },
-    {
-      "fault_type": "schema_drift",
-      "seed": 61,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": false,
-      "champion_acc": 0.899,
-      "candidate_acc": 0.899
-    },
-    {
-      "fault_type": "schema_drift",
-      "seed": 62,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": true,
-      "champion_acc": 0.923,
-      "candidate_acc": 0.73
-    },
-    {
-      "fault_type": "schema_drift",
-      "seed": 63,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": false,
-      "champion_acc": 0.906,
+      "champion_acc": 0.9067,
       "candidate_acc": 0.906
     },
     {
-      "fault_type": "schema_drift",
-      "seed": 64,
+      "fault_type": "degraded_slice",
+      "seed": 1006,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.9127,
+      "candidate_acc": 0.9093
+    },
+    {
+      "fault_type": "degraded_slice",
+      "seed": 1007,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.908,
+      "candidate_acc": 0.9087
+    },
+    {
+      "fault_type": "degraded_slice",
+      "seed": 1008,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.908,
+      "candidate_acc": 0.9053
+    },
+    {
+      "fault_type": "degraded_slice",
+      "seed": 1009,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.896,
+      "candidate_acc": 0.8947
+    },
+    {
+      "fault_type": "degraded_slice",
+      "seed": 1010,
       "modelgate_detected": true,
       "modelgate_status": "fail",
       "baseline_detected": false,
       "champion_acc": 0.904,
-      "candidate_acc": 0.905
+      "candidate_acc": 0.9027
     },
     {
-      "fault_type": "schema_drift",
-      "seed": 65,
+      "fault_type": "degraded_slice",
+      "seed": 1011,
       "modelgate_detected": true,
       "modelgate_status": "fail",
       "baseline_detected": false,
-      "champion_acc": 0.914,
-      "candidate_acc": 0.915
+      "champion_acc": 0.8993,
+      "candidate_acc": 0.9
     },
     {
-      "fault_type": "schema_drift",
-      "seed": 66,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": true,
-      "champion_acc": 0.905,
-      "candidate_acc": 0.597
-    },
-    {
-      "fault_type": "schema_drift",
-      "seed": 67,
+      "fault_type": "degraded_slice",
+      "seed": 1012,
       "modelgate_detected": true,
       "modelgate_status": "fail",
       "baseline_detected": false,
-      "champion_acc": 0.911,
-      "candidate_acc": 0.912
+      "champion_acc": 0.916,
+      "candidate_acc": 0.9153
     },
     {
-      "fault_type": "schema_drift",
-      "seed": 68,
+      "fault_type": "degraded_slice",
+      "seed": 1013,
       "modelgate_detected": true,
       "modelgate_status": "fail",
       "baseline_detected": false,
-      "champion_acc": 0.911,
-      "candidate_acc": 0.912
+      "champion_acc": 0.9027,
+      "candidate_acc": 0.902
     },
     {
-      "fault_type": "schema_drift",
-      "seed": 69,
+      "fault_type": "degraded_slice",
+      "seed": 1014,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.904,
+      "candidate_acc": 0.904
+    },
+    {
+      "fault_type": "degraded_slice",
+      "seed": 1015,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.8993,
+      "candidate_acc": 0.8973
+    },
+    {
+      "fault_type": "degraded_slice",
+      "seed": 1016,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.9,
+      "candidate_acc": 0.896
+    },
+    {
+      "fault_type": "degraded_slice",
+      "seed": 1017,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.9093,
+      "candidate_acc": 0.9067
+    },
+    {
+      "fault_type": "degraded_slice",
+      "seed": 1018,
       "modelgate_detected": true,
       "modelgate_status": "fail",
       "baseline_detected": false,
       "champion_acc": 0.906,
-      "candidate_acc": 0.905
+      "candidate_acc": 0.9047
     },
     {
-      "fault_type": "schema_drift",
-      "seed": 70,
+      "fault_type": "degraded_slice",
+      "seed": 1019,
       "modelgate_detected": true,
       "modelgate_status": "fail",
       "baseline_detected": false,
-      "champion_acc": 0.925,
-      "candidate_acc": 0.923
+      "champion_acc": 0.9007,
+      "candidate_acc": 0.9007
+    },
+    {
+      "fault_type": "degraded_slice",
+      "seed": 1020,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.908,
+      "candidate_acc": 0.9087
+    },
+    {
+      "fault_type": "degraded_slice",
+      "seed": 1021,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.8993,
+      "candidate_acc": 0.8993
+    },
+    {
+      "fault_type": "degraded_slice",
+      "seed": 1022,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.8967,
+      "candidate_acc": 0.8947
+    },
+    {
+      "fault_type": "degraded_slice",
+      "seed": 1023,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.9033,
+      "candidate_acc": 0.9027
+    },
+    {
+      "fault_type": "degraded_slice",
+      "seed": 1024,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.898,
+      "candidate_acc": 0.896
+    },
+    {
+      "fault_type": "degraded_slice",
+      "seed": 1025,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.9033,
+      "candidate_acc": 0.9047
+    },
+    {
+      "fault_type": "degraded_slice",
+      "seed": 1026,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.9073,
+      "candidate_acc": 0.9073
+    },
+    {
+      "fault_type": "degraded_slice",
+      "seed": 1027,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.9067,
+      "candidate_acc": 0.906
+    },
+    {
+      "fault_type": "degraded_slice",
+      "seed": 1028,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.9047,
+      "candidate_acc": 0.9067
+    },
+    {
+      "fault_type": "degraded_slice",
+      "seed": 1029,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.9253,
+      "candidate_acc": 0.9247
     },
     {
       "fault_type": "schema_drift",
-      "seed": 71,
+      "seed": 1000,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.908,
+      "candidate_acc": 0.9073
+    },
+    {
+      "fault_type": "schema_drift",
+      "seed": 1001,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.91,
+      "candidate_acc": 0.7333
+    },
+    {
+      "fault_type": "schema_drift",
+      "seed": 1002,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.9187,
+      "candidate_acc": 0.9113
+    },
+    {
+      "fault_type": "schema_drift",
+      "seed": 1003,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.912,
+      "candidate_acc": 0.8953
+    },
+    {
+      "fault_type": "schema_drift",
+      "seed": 1004,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.918,
+      "candidate_acc": 0.884
+    },
+    {
+      "fault_type": "schema_drift",
+      "seed": 1005,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.9067,
+      "candidate_acc": 0.8993
+    },
+    {
+      "fault_type": "schema_drift",
+      "seed": 1006,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.9127,
+      "candidate_acc": 0.894
+    },
+    {
+      "fault_type": "schema_drift",
+      "seed": 1007,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.908,
+      "candidate_acc": 0.9053
+    },
+    {
+      "fault_type": "schema_drift",
+      "seed": 1008,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.908,
+      "candidate_acc": 0.9013
+    },
+    {
+      "fault_type": "schema_drift",
+      "seed": 1009,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.896,
+      "candidate_acc": 0.8513
+    },
+    {
+      "fault_type": "schema_drift",
+      "seed": 1010,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.904,
+      "candidate_acc": 0.812
+    },
+    {
+      "fault_type": "schema_drift",
+      "seed": 1011,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.8993,
+      "candidate_acc": 0.886
+    },
+    {
+      "fault_type": "schema_drift",
+      "seed": 1012,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.916,
+      "candidate_acc": 0.828
+    },
+    {
+      "fault_type": "schema_drift",
+      "seed": 1013,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.9027,
+      "candidate_acc": 0.902
+    },
+    {
+      "fault_type": "schema_drift",
+      "seed": 1014,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.904,
+      "candidate_acc": 0.894
+    },
+    {
+      "fault_type": "schema_drift",
+      "seed": 1015,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.8993,
+      "candidate_acc": 0.5753
+    },
+    {
+      "fault_type": "schema_drift",
+      "seed": 1016,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.9,
+      "candidate_acc": 0.9007
+    },
+    {
+      "fault_type": "schema_drift",
+      "seed": 1017,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.9093,
+      "candidate_acc": 0.7153
+    },
+    {
+      "fault_type": "schema_drift",
+      "seed": 1018,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.906,
+      "candidate_acc": 0.904
+    },
+    {
+      "fault_type": "schema_drift",
+      "seed": 1019,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.9007,
+      "candidate_acc": 0.9013
+    },
+    {
+      "fault_type": "schema_drift",
+      "seed": 1020,
       "modelgate_detected": true,
       "modelgate_status": "fail",
       "baseline_detected": true,
       "champion_acc": 0.908,
-      "candidate_acc": 0.894
+      "candidate_acc": 0.8553
     },
     {
-      "fault_type": "latency_regression",
-      "seed": 42,
+      "fault_type": "schema_drift",
+      "seed": 1021,
       "modelgate_detected": true,
       "modelgate_status": "fail",
       "baseline_detected": false,
-      "champion_acc": 0.909,
-      "candidate_acc": 0.915
+      "champion_acc": 0.8993,
+      "candidate_acc": 0.8967
     },
     {
-      "fault_type": "latency_regression",
-      "seed": 43,
+      "fault_type": "schema_drift",
+      "seed": 1022,
       "modelgate_detected": true,
       "modelgate_status": "fail",
       "baseline_detected": false,
-      "champion_acc": 0.911,
+      "champion_acc": 0.8967,
+      "candidate_acc": 0.8913
+    },
+    {
+      "fault_type": "schema_drift",
+      "seed": 1023,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.9033,
+      "candidate_acc": 0.8653
+    },
+    {
+      "fault_type": "schema_drift",
+      "seed": 1024,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.898,
+      "candidate_acc": 0.898
+    },
+    {
+      "fault_type": "schema_drift",
+      "seed": 1025,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.9033,
+      "candidate_acc": 0.9053
+    },
+    {
+      "fault_type": "schema_drift",
+      "seed": 1026,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.9073,
+      "candidate_acc": 0.8833
+    },
+    {
+      "fault_type": "schema_drift",
+      "seed": 1027,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.9067,
+      "candidate_acc": 0.88
+    },
+    {
+      "fault_type": "schema_drift",
+      "seed": 1028,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.9047,
+      "candidate_acc": 0.5273
+    },
+    {
+      "fault_type": "schema_drift",
+      "seed": 1029,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
+      "champion_acc": 0.9253,
+      "candidate_acc": 0.8593
+    },
+    {
+      "fault_type": "latency_regression",
+      "seed": 1000,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.908,
+      "candidate_acc": 0.9093
+    },
+    {
+      "fault_type": "latency_regression",
+      "seed": 1001,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.91,
+      "candidate_acc": 0.912
+    },
+    {
+      "fault_type": "latency_regression",
+      "seed": 1002,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.9187,
+      "candidate_acc": 0.9207
+    },
+    {
+      "fault_type": "latency_regression",
+      "seed": 1003,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.912,
+      "candidate_acc": 0.9127
+    },
+    {
+      "fault_type": "latency_regression",
+      "seed": 1004,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.918,
+      "candidate_acc": 0.9193
+    },
+    {
+      "fault_type": "latency_regression",
+      "seed": 1005,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.9067,
+      "candidate_acc": 0.9073
+    },
+    {
+      "fault_type": "latency_regression",
+      "seed": 1006,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.9127,
       "candidate_acc": 0.914
     },
     {
       "fault_type": "latency_regression",
-      "seed": 44,
+      "seed": 1007,
       "modelgate_detected": true,
       "modelgate_status": "fail",
       "baseline_detected": false,
       "champion_acc": 0.908,
-      "candidate_acc": 0.908
+      "candidate_acc": 0.91
     },
     {
       "fault_type": "latency_regression",
-      "seed": 45,
+      "seed": 1008,
       "modelgate_detected": true,
       "modelgate_status": "fail",
       "baseline_detected": false,
-      "champion_acc": 0.923,
-      "candidate_acc": 0.927
+      "champion_acc": 0.908,
+      "candidate_acc": 0.9067
     },
     {
       "fault_type": "latency_regression",
-      "seed": 46,
+      "seed": 1009,
       "modelgate_detected": true,
       "modelgate_status": "fail",
       "baseline_detected": false,
-      "champion_acc": 0.886,
-      "candidate_acc": 0.889
+      "champion_acc": 0.896,
+      "candidate_acc": 0.8973
     },
     {
       "fault_type": "latency_regression",
-      "seed": 47,
+      "seed": 1010,
       "modelgate_detected": true,
       "modelgate_status": "fail",
       "baseline_detected": false,
-      "champion_acc": 0.905,
-      "candidate_acc": 0.907
-    },
-    {
-      "fault_type": "latency_regression",
-      "seed": 48,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": false,
-      "champion_acc": 0.918,
-      "candidate_acc": 0.921
-    },
-    {
-      "fault_type": "latency_regression",
-      "seed": 49,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": false,
-      "champion_acc": 0.906,
-      "candidate_acc": 0.907
-    },
-    {
-      "fault_type": "latency_regression",
-      "seed": 50,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": false,
-      "champion_acc": 0.902,
+      "champion_acc": 0.904,
       "candidate_acc": 0.904
     },
     {
       "fault_type": "latency_regression",
-      "seed": 51,
+      "seed": 1011,
       "modelgate_detected": true,
       "modelgate_status": "fail",
       "baseline_detected": false,
-      "champion_acc": 0.927,
-      "candidate_acc": 0.929
+      "champion_acc": 0.8993,
+      "candidate_acc": 0.9027
     },
     {
       "fault_type": "latency_regression",
-      "seed": 52,
+      "seed": 1012,
       "modelgate_detected": true,
       "modelgate_status": "fail",
       "baseline_detected": false,
-      "champion_acc": 0.888,
-      "candidate_acc": 0.891
+      "champion_acc": 0.916,
+      "candidate_acc": 0.9167
     },
     {
       "fault_type": "latency_regression",
-      "seed": 53,
+      "seed": 1013,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.9027,
+      "candidate_acc": 0.904
+    },
+    {
+      "fault_type": "latency_regression",
+      "seed": 1014,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.904,
+      "candidate_acc": 0.9033
+    },
+    {
+      "fault_type": "latency_regression",
+      "seed": 1015,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.8993,
+      "candidate_acc": 0.9007
+    },
+    {
+      "fault_type": "latency_regression",
+      "seed": 1016,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.9,
+      "candidate_acc": 0.9027
+    },
+    {
+      "fault_type": "latency_regression",
+      "seed": 1017,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.9093,
+      "candidate_acc": 0.9087
+    },
+    {
+      "fault_type": "latency_regression",
+      "seed": 1018,
       "modelgate_detected": true,
       "modelgate_status": "fail",
       "baseline_detected": false,
       "champion_acc": 0.906,
-      "candidate_acc": 0.907
+      "candidate_acc": 0.906
     },
     {
       "fault_type": "latency_regression",
-      "seed": 54,
+      "seed": 1019,
       "modelgate_detected": true,
       "modelgate_status": "fail",
       "baseline_detected": false,
+      "champion_acc": 0.9007,
+      "candidate_acc": 0.9027
+    },
+    {
+      "fault_type": "latency_regression",
+      "seed": 1020,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.908,
+      "candidate_acc": 0.91
+    },
+    {
+      "fault_type": "latency_regression",
+      "seed": 1021,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.8993,
+      "candidate_acc": 0.9
+    },
+    {
+      "fault_type": "latency_regression",
+      "seed": 1022,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.8967,
+      "candidate_acc": 0.898
+    },
+    {
+      "fault_type": "latency_regression",
+      "seed": 1023,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.9033,
+      "candidate_acc": 0.904
+    },
+    {
+      "fault_type": "latency_regression",
+      "seed": 1024,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.898,
+      "candidate_acc": 0.8967
+    },
+    {
+      "fault_type": "latency_regression",
+      "seed": 1025,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.9033,
+      "candidate_acc": 0.9053
+    },
+    {
+      "fault_type": "latency_regression",
+      "seed": 1026,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.9073,
+      "candidate_acc": 0.91
+    },
+    {
+      "fault_type": "latency_regression",
+      "seed": 1027,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.9067,
+      "candidate_acc": 0.9067
+    },
+    {
+      "fault_type": "latency_regression",
+      "seed": 1028,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.9047,
+      "candidate_acc": 0.9067
+    },
+    {
+      "fault_type": "latency_regression",
+      "seed": 1029,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": false,
+      "champion_acc": 0.9253,
+      "candidate_acc": 0.9253
+    },
+    {
+      "fault_type": "fairness_regression",
+      "seed": 1000,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": true,
+      "champion_acc": 0.908,
+      "candidate_acc": 0.896
+    },
+    {
+      "fault_type": "fairness_regression",
+      "seed": 1001,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.91,
+      "candidate_acc": 0.906
+    },
+    {
+      "fault_type": "fairness_regression",
+      "seed": 1002,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.9187,
+      "candidate_acc": 0.916
+    },
+    {
+      "fault_type": "fairness_regression",
+      "seed": 1003,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.912,
+      "candidate_acc": 0.9047
+    },
+    {
+      "fault_type": "fairness_regression",
+      "seed": 1004,
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
+      "baseline_detected": true,
       "champion_acc": 0.918,
-      "candidate_acc": 0.921
+      "candidate_acc": 0.9053
     },
     {
-      "fault_type": "latency_regression",
-      "seed": 55,
+      "fault_type": "fairness_regression",
+      "seed": 1005,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": true,
+      "champion_acc": 0.9067,
+      "candidate_acc": 0.8913
+    },
+    {
+      "fault_type": "fairness_regression",
+      "seed": 1006,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.9127,
+      "candidate_acc": 0.9067
+    },
+    {
+      "fault_type": "fairness_regression",
+      "seed": 1007,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.908,
+      "candidate_acc": 0.9053
+    },
+    {
+      "fault_type": "fairness_regression",
+      "seed": 1008,
       "modelgate_detected": true,
       "modelgate_status": "fail",
       "baseline_detected": false,
-      "champion_acc": 0.92,
-      "candidate_acc": 0.922
+      "champion_acc": 0.908,
+      "candidate_acc": 0.9
     },
     {
-      "fault_type": "latency_regression",
-      "seed": 56,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
+      "fault_type": "fairness_regression",
+      "seed": 1009,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
       "baseline_detected": false,
-      "champion_acc": 0.893,
-      "candidate_acc": 0.899
-    },
-    {
-      "fault_type": "latency_regression",
-      "seed": 57,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": false,
-      "champion_acc": 0.892,
-      "candidate_acc": 0.895
-    },
-    {
-      "fault_type": "latency_regression",
-      "seed": 58,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": false,
-      "champion_acc": 0.909,
-      "candidate_acc": 0.909
-    },
-    {
-      "fault_type": "latency_regression",
-      "seed": 59,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": false,
-      "champion_acc": 0.911,
-      "candidate_acc": 0.913
-    },
-    {
-      "fault_type": "latency_regression",
-      "seed": 60,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": false,
-      "champion_acc": 0.89,
+      "champion_acc": 0.896,
       "candidate_acc": 0.89
     },
     {
-      "fault_type": "latency_regression",
-      "seed": 61,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": false,
-      "champion_acc": 0.899,
-      "candidate_acc": 0.903
-    },
-    {
-      "fault_type": "latency_regression",
-      "seed": 62,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": false,
-      "champion_acc": 0.923,
-      "candidate_acc": 0.923
-    },
-    {
-      "fault_type": "latency_regression",
-      "seed": 63,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": false,
-      "champion_acc": 0.906,
-      "candidate_acc": 0.906
-    },
-    {
-      "fault_type": "latency_regression",
-      "seed": 64,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": false,
-      "champion_acc": 0.904,
-      "candidate_acc": 0.907
-    },
-    {
-      "fault_type": "latency_regression",
-      "seed": 65,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": false,
-      "champion_acc": 0.914,
-      "candidate_acc": 0.913
-    },
-    {
-      "fault_type": "latency_regression",
-      "seed": 66,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": false,
-      "champion_acc": 0.905,
-      "candidate_acc": 0.906
-    },
-    {
-      "fault_type": "latency_regression",
-      "seed": 67,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": false,
-      "champion_acc": 0.911,
-      "candidate_acc": 0.912
-    },
-    {
-      "fault_type": "latency_regression",
-      "seed": 68,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": false,
-      "champion_acc": 0.911,
-      "candidate_acc": 0.912
-    },
-    {
-      "fault_type": "latency_regression",
-      "seed": 69,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": false,
-      "champion_acc": 0.906,
-      "candidate_acc": 0.905
-    },
-    {
-      "fault_type": "latency_regression",
-      "seed": 70,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": false,
-      "champion_acc": 0.925,
-      "candidate_acc": 0.924
-    },
-    {
-      "fault_type": "latency_regression",
-      "seed": 71,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": false,
-      "champion_acc": 0.908,
-      "candidate_acc": 0.911
-    },
-    {
       "fault_type": "fairness_regression",
-      "seed": 42,
-      "modelgate_detected": true,
-      "modelgate_status": "warn",
-      "baseline_detected": true,
-      "champion_acc": 0.909,
-      "candidate_acc": 0.891
-    },
-    {
-      "fault_type": "fairness_regression",
-      "seed": 43,
+      "seed": 1010,
       "modelgate_detected": false,
       "modelgate_status": "pass",
-      "baseline_detected": true,
-      "champion_acc": 0.911,
-      "candidate_acc": 0.9
-    },
-    {
-      "fault_type": "fairness_regression",
-      "seed": 44,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": true,
-      "champion_acc": 0.908,
-      "candidate_acc": 0.887
-    },
-    {
-      "fault_type": "fairness_regression",
-      "seed": 45,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": true,
-      "champion_acc": 0.923,
-      "candidate_acc": 0.909
-    },
-    {
-      "fault_type": "fairness_regression",
-      "seed": 46,
-      "modelgate_detected": true,
-      "modelgate_status": "warn",
-      "baseline_detected": true,
-      "champion_acc": 0.886,
-      "candidate_acc": 0.867
-    },
-    {
-      "fault_type": "fairness_regression",
-      "seed": 47,
-      "modelgate_detected": false,
-      "modelgate_status": "pass",
-      "baseline_detected": true,
-      "champion_acc": 0.905,
-      "candidate_acc": 0.895
-    },
-    {
-      "fault_type": "fairness_regression",
-      "seed": 48,
-      "modelgate_detected": false,
-      "modelgate_status": "pass",
-      "baseline_detected": true,
-      "champion_acc": 0.918,
-      "candidate_acc": 0.903
-    },
-    {
-      "fault_type": "fairness_regression",
-      "seed": 49,
-      "modelgate_detected": false,
-      "modelgate_status": "pass",
-      "baseline_detected": false,
-      "champion_acc": 0.906,
-      "candidate_acc": 0.897
-    },
-    {
-      "fault_type": "fairness_regression",
-      "seed": 50,
-      "modelgate_detected": true,
-      "modelgate_status": "warn",
-      "baseline_detected": true,
-      "champion_acc": 0.902,
-      "candidate_acc": 0.885
-    },
-    {
-      "fault_type": "fairness_regression",
-      "seed": 51,
-      "modelgate_detected": false,
-      "modelgate_status": "pass",
-      "baseline_detected": false,
-      "champion_acc": 0.927,
-      "candidate_acc": 0.919
-    },
-    {
-      "fault_type": "fairness_regression",
-      "seed": 52,
-      "modelgate_detected": true,
-      "modelgate_status": "warn",
-      "baseline_detected": true,
-      "champion_acc": 0.888,
-      "candidate_acc": 0.872
-    },
-    {
-      "fault_type": "fairness_regression",
-      "seed": 53,
-      "modelgate_detected": false,
-      "modelgate_status": "pass",
-      "baseline_detected": true,
-      "champion_acc": 0.906,
-      "candidate_acc": 0.893
-    },
-    {
-      "fault_type": "fairness_regression",
-      "seed": 54,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": true,
-      "champion_acc": 0.918,
-      "candidate_acc": 0.893
-    },
-    {
-      "fault_type": "fairness_regression",
-      "seed": 55,
-      "modelgate_detected": false,
-      "modelgate_status": "pass",
-      "baseline_detected": true,
-      "champion_acc": 0.92,
-      "candidate_acc": 0.91
-    },
-    {
-      "fault_type": "fairness_regression",
-      "seed": 56,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": true,
-      "champion_acc": 0.893,
-      "candidate_acc": 0.875
-    },
-    {
-      "fault_type": "fairness_regression",
-      "seed": 57,
-      "modelgate_detected": false,
-      "modelgate_status": "pass",
-      "baseline_detected": false,
-      "champion_acc": 0.892,
-      "candidate_acc": 0.884
-    },
-    {
-      "fault_type": "fairness_regression",
-      "seed": 58,
-      "modelgate_detected": false,
-      "modelgate_status": "pass",
-      "baseline_detected": false,
-      "champion_acc": 0.909,
-      "candidate_acc": 0.9
-    },
-    {
-      "fault_type": "fairness_regression",
-      "seed": 59,
-      "modelgate_detected": false,
-      "modelgate_status": "pass",
-      "baseline_detected": true,
-      "champion_acc": 0.911,
-      "candidate_acc": 0.9
-    },
-    {
-      "fault_type": "fairness_regression",
-      "seed": 60,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": true,
-      "champion_acc": 0.89,
-      "candidate_acc": 0.868
-    },
-    {
-      "fault_type": "fairness_regression",
-      "seed": 61,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": true,
-      "champion_acc": 0.899,
-      "candidate_acc": 0.879
-    },
-    {
-      "fault_type": "fairness_regression",
-      "seed": 62,
-      "modelgate_detected": false,
-      "modelgate_status": "pass",
-      "baseline_detected": true,
-      "champion_acc": 0.923,
-      "candidate_acc": 0.91
-    },
-    {
-      "fault_type": "fairness_regression",
-      "seed": 63,
-      "modelgate_detected": false,
-      "modelgate_status": "pass",
-      "baseline_detected": true,
-      "champion_acc": 0.906,
-      "candidate_acc": 0.895
-    },
-    {
-      "fault_type": "fairness_regression",
-      "seed": 64,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
       "baseline_detected": true,
       "champion_acc": 0.904,
-      "candidate_acc": 0.879
+      "candidate_acc": 0.8927
     },
     {
       "fault_type": "fairness_regression",
-      "seed": 65,
-      "modelgate_detected": false,
-      "modelgate_status": "pass",
-      "baseline_detected": false,
-      "champion_acc": 0.914,
-      "candidate_acc": 0.912
-    },
-    {
-      "fault_type": "fairness_regression",
-      "seed": 66,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
-      "baseline_detected": true,
-      "champion_acc": 0.905,
-      "candidate_acc": 0.877
-    },
-    {
-      "fault_type": "fairness_regression",
-      "seed": 67,
+      "seed": 1011,
       "modelgate_detected": false,
       "modelgate_status": "pass",
       "baseline_detected": true,
-      "champion_acc": 0.911,
-      "candidate_acc": 0.899
+      "champion_acc": 0.8993,
+      "candidate_acc": 0.8873
     },
     {
       "fault_type": "fairness_regression",
-      "seed": 68,
+      "seed": 1012,
       "modelgate_detected": false,
       "modelgate_status": "pass",
       "baseline_detected": false,
-      "champion_acc": 0.911,
-      "candidate_acc": 0.905
+      "champion_acc": 0.916,
+      "candidate_acc": 0.9087
     },
     {
       "fault_type": "fairness_regression",
-      "seed": 69,
+      "seed": 1013,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.9027,
+      "candidate_acc": 0.8947
+    },
+    {
+      "fault_type": "fairness_regression",
+      "seed": 1014,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.904,
+      "candidate_acc": 0.8993
+    },
+    {
+      "fault_type": "fairness_regression",
+      "seed": 1015,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.8993,
+      "candidate_acc": 0.8927
+    },
+    {
+      "fault_type": "fairness_regression",
+      "seed": 1016,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": true,
+      "champion_acc": 0.9,
+      "candidate_acc": 0.8893
+    },
+    {
+      "fault_type": "fairness_regression",
+      "seed": 1017,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.9093,
+      "candidate_acc": 0.9007
+    },
+    {
+      "fault_type": "fairness_regression",
+      "seed": 1018,
       "modelgate_detected": false,
       "modelgate_status": "pass",
       "baseline_detected": false,
       "champion_acc": 0.906,
-      "candidate_acc": 0.897
+      "candidate_acc": 0.9053
     },
     {
       "fault_type": "fairness_regression",
-      "seed": 70,
-      "modelgate_detected": true,
-      "modelgate_status": "fail",
+      "seed": 1019,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
       "baseline_detected": true,
-      "champion_acc": 0.925,
-      "candidate_acc": 0.909
+      "champion_acc": 0.9007,
+      "candidate_acc": 0.8867
     },
     {
       "fault_type": "fairness_regression",
-      "seed": 71,
+      "seed": 1020,
       "modelgate_detected": false,
       "modelgate_status": "pass",
       "baseline_detected": true,
@@ -1672,274 +1661,355 @@
       "candidate_acc": 0.898
     },
     {
-      "fault_type": "noop",
-      "seed": 42,
+      "fault_type": "fairness_regression",
+      "seed": 1021,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": true,
+      "champion_acc": 0.8993,
+      "candidate_acc": 0.8893
+    },
+    {
+      "fault_type": "fairness_regression",
+      "seed": 1022,
       "modelgate_detected": false,
       "modelgate_status": "pass",
       "baseline_detected": false,
-      "champion_acc": 0.909,
-      "candidate_acc": 0.909
+      "champion_acc": 0.8967,
+      "candidate_acc": 0.888
     },
     {
-      "fault_type": "noop",
-      "seed": 43,
+      "fault_type": "fairness_regression",
+      "seed": 1023,
       "modelgate_detected": false,
       "modelgate_status": "pass",
       "baseline_detected": false,
-      "champion_acc": 0.911,
-      "candidate_acc": 0.911
+      "champion_acc": 0.9033,
+      "candidate_acc": 0.9007
+    },
+    {
+      "fault_type": "fairness_regression",
+      "seed": 1024,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.898,
+      "candidate_acc": 0.8887
+    },
+    {
+      "fault_type": "fairness_regression",
+      "seed": 1025,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.9033,
+      "candidate_acc": 0.8987
+    },
+    {
+      "fault_type": "fairness_regression",
+      "seed": 1026,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.9073,
+      "candidate_acc": 0.8987
+    },
+    {
+      "fault_type": "fairness_regression",
+      "seed": 1027,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.9067,
+      "candidate_acc": 0.902
+    },
+    {
+      "fault_type": "fairness_regression",
+      "seed": 1028,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.9047,
+      "candidate_acc": 0.902
+    },
+    {
+      "fault_type": "fairness_regression",
+      "seed": 1029,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.9253,
+      "candidate_acc": 0.9187
     },
     {
       "fault_type": "noop",
-      "seed": 44,
+      "seed": 1000,
       "modelgate_detected": false,
       "modelgate_status": "pass",
       "baseline_detected": false,
       "champion_acc": 0.908,
-      "candidate_acc": 0.908
+      "candidate_acc": 0.9087
     },
     {
       "fault_type": "noop",
-      "seed": 45,
+      "seed": 1001,
       "modelgate_detected": false,
       "modelgate_status": "pass",
       "baseline_detected": false,
-      "champion_acc": 0.923,
-      "candidate_acc": 0.923
+      "champion_acc": 0.91,
+      "candidate_acc": 0.91
     },
     {
       "fault_type": "noop",
-      "seed": 46,
+      "seed": 1002,
       "modelgate_detected": false,
       "modelgate_status": "pass",
       "baseline_detected": false,
-      "champion_acc": 0.886,
-      "candidate_acc": 0.886
-    },
-    {
-      "fault_type": "noop",
-      "seed": 47,
-      "modelgate_detected": false,
-      "modelgate_status": "pass",
-      "baseline_detected": false,
-      "champion_acc": 0.905,
-      "candidate_acc": 0.905
-    },
-    {
-      "fault_type": "noop",
-      "seed": 48,
-      "modelgate_detected": false,
-      "modelgate_status": "pass",
-      "baseline_detected": false,
-      "champion_acc": 0.918,
-      "candidate_acc": 0.918
-    },
-    {
-      "fault_type": "noop",
-      "seed": 49,
-      "modelgate_detected": false,
-      "modelgate_status": "pass",
-      "baseline_detected": false,
-      "champion_acc": 0.906,
-      "candidate_acc": 0.906
-    },
-    {
-      "fault_type": "noop",
-      "seed": 50,
-      "modelgate_detected": false,
-      "modelgate_status": "pass",
-      "baseline_detected": false,
-      "champion_acc": 0.902,
-      "candidate_acc": 0.902
-    },
-    {
-      "fault_type": "noop",
-      "seed": 51,
-      "modelgate_detected": false,
-      "modelgate_status": "pass",
-      "baseline_detected": false,
-      "champion_acc": 0.927,
-      "candidate_acc": 0.927
-    },
-    {
-      "fault_type": "noop",
-      "seed": 52,
-      "modelgate_detected": false,
-      "modelgate_status": "pass",
-      "baseline_detected": false,
-      "champion_acc": 0.888,
-      "candidate_acc": 0.888
-    },
-    {
-      "fault_type": "noop",
-      "seed": 53,
-      "modelgate_detected": false,
-      "modelgate_status": "pass",
-      "baseline_detected": false,
-      "champion_acc": 0.906,
-      "candidate_acc": 0.906
-    },
-    {
-      "fault_type": "noop",
-      "seed": 54,
-      "modelgate_detected": false,
-      "modelgate_status": "pass",
-      "baseline_detected": false,
-      "champion_acc": 0.918,
-      "candidate_acc": 0.918
-    },
-    {
-      "fault_type": "noop",
-      "seed": 55,
-      "modelgate_detected": false,
-      "modelgate_status": "pass",
-      "baseline_detected": false,
-      "champion_acc": 0.92,
+      "champion_acc": 0.9187,
       "candidate_acc": 0.92
     },
     {
       "fault_type": "noop",
-      "seed": 56,
+      "seed": 1003,
       "modelgate_detected": false,
       "modelgate_status": "pass",
       "baseline_detected": false,
-      "champion_acc": 0.893,
-      "candidate_acc": 0.893
+      "champion_acc": 0.912,
+      "candidate_acc": 0.912
     },
     {
       "fault_type": "noop",
-      "seed": 57,
+      "seed": 1004,
       "modelgate_detected": false,
       "modelgate_status": "pass",
       "baseline_detected": false,
-      "champion_acc": 0.892,
-      "candidate_acc": 0.892
+      "champion_acc": 0.918,
+      "candidate_acc": 0.9173
     },
     {
       "fault_type": "noop",
-      "seed": 58,
+      "seed": 1005,
       "modelgate_detected": false,
       "modelgate_status": "pass",
       "baseline_detected": false,
-      "champion_acc": 0.909,
-      "candidate_acc": 0.909
+      "champion_acc": 0.9067,
+      "candidate_acc": 0.9067
     },
     {
       "fault_type": "noop",
-      "seed": 59,
+      "seed": 1006,
       "modelgate_detected": false,
       "modelgate_status": "pass",
       "baseline_detected": false,
-      "champion_acc": 0.911,
-      "candidate_acc": 0.911
+      "champion_acc": 0.9127,
+      "candidate_acc": 0.912
     },
     {
       "fault_type": "noop",
-      "seed": 60,
-      "modelgate_detected": false,
-      "modelgate_status": "pass",
-      "baseline_detected": false,
-      "champion_acc": 0.89,
-      "candidate_acc": 0.89
-    },
-    {
-      "fault_type": "noop",
-      "seed": 61,
-      "modelgate_detected": false,
-      "modelgate_status": "pass",
-      "baseline_detected": false,
-      "champion_acc": 0.899,
-      "candidate_acc": 0.899
-    },
-    {
-      "fault_type": "noop",
-      "seed": 62,
-      "modelgate_detected": false,
-      "modelgate_status": "pass",
-      "baseline_detected": false,
-      "champion_acc": 0.923,
-      "candidate_acc": 0.923
-    },
-    {
-      "fault_type": "noop",
-      "seed": 63,
-      "modelgate_detected": false,
-      "modelgate_status": "pass",
-      "baseline_detected": false,
-      "champion_acc": 0.906,
-      "candidate_acc": 0.906
-    },
-    {
-      "fault_type": "noop",
-      "seed": 64,
-      "modelgate_detected": false,
-      "modelgate_status": "pass",
-      "baseline_detected": false,
-      "champion_acc": 0.904,
-      "candidate_acc": 0.904
-    },
-    {
-      "fault_type": "noop",
-      "seed": 65,
-      "modelgate_detected": false,
-      "modelgate_status": "pass",
-      "baseline_detected": false,
-      "champion_acc": 0.914,
-      "candidate_acc": 0.914
-    },
-    {
-      "fault_type": "noop",
-      "seed": 66,
-      "modelgate_detected": false,
-      "modelgate_status": "pass",
-      "baseline_detected": false,
-      "champion_acc": 0.905,
-      "candidate_acc": 0.905
-    },
-    {
-      "fault_type": "noop",
-      "seed": 67,
-      "modelgate_detected": false,
-      "modelgate_status": "pass",
-      "baseline_detected": false,
-      "champion_acc": 0.911,
-      "candidate_acc": 0.911
-    },
-    {
-      "fault_type": "noop",
-      "seed": 68,
-      "modelgate_detected": false,
-      "modelgate_status": "pass",
-      "baseline_detected": false,
-      "champion_acc": 0.911,
-      "candidate_acc": 0.911
-    },
-    {
-      "fault_type": "noop",
-      "seed": 69,
-      "modelgate_detected": false,
-      "modelgate_status": "pass",
-      "baseline_detected": false,
-      "champion_acc": 0.906,
-      "candidate_acc": 0.906
-    },
-    {
-      "fault_type": "noop",
-      "seed": 70,
-      "modelgate_detected": false,
-      "modelgate_status": "pass",
-      "baseline_detected": false,
-      "champion_acc": 0.925,
-      "candidate_acc": 0.925
-    },
-    {
-      "fault_type": "noop",
-      "seed": 71,
+      "seed": 1007,
       "modelgate_detected": false,
       "modelgate_status": "pass",
       "baseline_detected": false,
       "champion_acc": 0.908,
       "candidate_acc": 0.908
+    },
+    {
+      "fault_type": "noop",
+      "seed": 1008,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.908,
+      "candidate_acc": 0.908
+    },
+    {
+      "fault_type": "noop",
+      "seed": 1009,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.896,
+      "candidate_acc": 0.896
+    },
+    {
+      "fault_type": "noop",
+      "seed": 1010,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.904,
+      "candidate_acc": 0.9033
+    },
+    {
+      "fault_type": "noop",
+      "seed": 1011,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.8993,
+      "candidate_acc": 0.898
+    },
+    {
+      "fault_type": "noop",
+      "seed": 1012,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.916,
+      "candidate_acc": 0.916
+    },
+    {
+      "fault_type": "noop",
+      "seed": 1013,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.9027,
+      "candidate_acc": 0.9027
+    },
+    {
+      "fault_type": "noop",
+      "seed": 1014,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.904,
+      "candidate_acc": 0.9033
+    },
+    {
+      "fault_type": "noop",
+      "seed": 1015,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.8993,
+      "candidate_acc": 0.8993
+    },
+    {
+      "fault_type": "noop",
+      "seed": 1016,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.9,
+      "candidate_acc": 0.8993
+    },
+    {
+      "fault_type": "noop",
+      "seed": 1017,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.9093,
+      "candidate_acc": 0.9093
+    },
+    {
+      "fault_type": "noop",
+      "seed": 1018,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.906,
+      "candidate_acc": 0.906
+    },
+    {
+      "fault_type": "noop",
+      "seed": 1019,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.9007,
+      "candidate_acc": 0.9007
+    },
+    {
+      "fault_type": "noop",
+      "seed": 1020,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.908,
+      "candidate_acc": 0.908
+    },
+    {
+      "fault_type": "noop",
+      "seed": 1021,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.8993,
+      "candidate_acc": 0.9
+    },
+    {
+      "fault_type": "noop",
+      "seed": 1022,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.8967,
+      "candidate_acc": 0.8967
+    },
+    {
+      "fault_type": "noop",
+      "seed": 1023,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.9033,
+      "candidate_acc": 0.9027
+    },
+    {
+      "fault_type": "noop",
+      "seed": 1024,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.898,
+      "candidate_acc": 0.8987
+    },
+    {
+      "fault_type": "noop",
+      "seed": 1025,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.9033,
+      "candidate_acc": 0.9033
+    },
+    {
+      "fault_type": "noop",
+      "seed": 1026,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.9073,
+      "candidate_acc": 0.9073
+    },
+    {
+      "fault_type": "noop",
+      "seed": 1027,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.9067,
+      "candidate_acc": 0.9067
+    },
+    {
+      "fault_type": "noop",
+      "seed": 1028,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.9047,
+      "candidate_acc": 0.9047
+    },
+    {
+      "fault_type": "noop",
+      "seed": 1029,
+      "modelgate_detected": false,
+      "modelgate_status": "pass",
+      "baseline_detected": false,
+      "champion_acc": 0.9253,
+      "candidate_acc": 0.9253
     }
   ],
   "n_seeds": 30

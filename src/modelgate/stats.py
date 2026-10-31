@@ -7,9 +7,8 @@ All functions are deterministic given a numpy RandomState / seed.
 
 from __future__ import annotations
 
-from typing import Any, Callable
-
 from dataclasses import dataclass
+from typing import Any
 
 import numpy as np
 from numpy.typing import NDArray
@@ -28,6 +27,98 @@ class BootstrapResult:
     p_value: float = 1.0
 
 
+def _vectorized_paired_bootstrap(
+    y_true: NDArray[Any],
+    scores_a: NDArray[Any],
+    scores_b: NDArray[Any],
+    metric_name: str,
+    n_bootstrap: int,
+    confidence: float,
+    seed: int,
+) -> BootstrapResult | None:
+    """Vectorized paired bootstrap using multinomial weight matrix and confusion counts."""
+    n = len(y_true)
+    if n == 0:
+        return BootstrapResult(0.0, 0.0, 0.0, n_bootstrap, confidence, 1.0)
+
+    rng = np.random.RandomState(seed)
+    try:
+        weights = rng.multinomial(n, [1.0 / n] * n, size=n_bootstrap).astype(np.float64)
+    except Exception:
+        return None
+
+    if metric_name in ("f1", "weighted_f1"):
+        classes = np.unique(y_true)
+
+        def _calc_f1(scores: NDArray[Any]) -> NDArray[np.float64]:
+            weighted_f1_sum = np.zeros(n_bootstrap, dtype=np.float64)
+            total_support = np.zeros(n_bootstrap, dtype=np.float64)
+            for c in classes:
+                tp_mask = ((y_true == c) & (scores == c)).astype(np.float64)
+                fp_mask = ((y_true != c) & (scores == c)).astype(np.float64)
+                fn_mask = ((y_true == c) & (scores != c)).astype(np.float64)
+                supp_mask = (y_true == c).astype(np.float64)
+
+                tp = weights @ tp_mask
+                fp = weights @ fp_mask
+                fn = weights @ fn_mask
+                supp = weights @ supp_mask
+
+                denom = 2.0 * tp + fp + fn
+                f1_c = np.where(denom > 0, (2.0 * tp) / np.maximum(denom, 1e-12), 0.0)
+                weighted_f1_sum += f1_c * supp
+                total_support += supp
+            return np.where(
+                total_support > 0,
+                weighted_f1_sum / np.maximum(total_support, 1e-12),
+                0.0,
+            )
+
+        f1_a = _calc_f1(scores_a)
+        f1_b = _calc_f1(scores_b)
+        diffs = f1_a - f1_b
+
+        def _full_f1(scores: NDArray[Any]) -> float:
+            tot_sum = 0.0
+            tot_supp = 0.0
+            for c in classes:
+                tp = float(np.sum((y_true == c) & (scores == c)))
+                fp = float(np.sum((y_true != c) & (scores == c)))
+                fn = float(np.sum((y_true == c) & (scores != c)))
+                supp = float(np.sum(y_true == c))
+                denom = 2.0 * tp + fp + fn
+                f1_c = (2.0 * tp / denom) if denom > 0 else 0.0
+                tot_sum += f1_c * supp
+                tot_supp += supp
+            return tot_sum / tot_supp if tot_supp > 0 else 0.0
+
+        point_estimate = float(_full_f1(scores_a) - _full_f1(scores_b))
+
+    elif metric_name in ("accuracy", "acc"):
+        correct_a = (y_true == scores_a).astype(np.float64)
+        correct_b = (y_true == scores_b).astype(np.float64)
+        acc_a = (weights @ correct_a) / float(n)
+        acc_b = (weights @ correct_b) / float(n)
+        diffs = acc_a - acc_b
+        point_estimate = float(np.mean(correct_a) - np.mean(correct_b))
+    else:
+        return None
+
+    alpha = 1.0 - confidence
+    ci_lower = float(np.percentile(diffs, 100 * alpha / 2))
+    ci_upper = float(np.percentile(diffs, 100 * (1 - alpha / 2)))
+    p_value = float(np.mean(diffs <= 0))
+
+    return BootstrapResult(
+        point_estimate=point_estimate,
+        ci_lower=ci_lower,
+        ci_upper=ci_upper,
+        n_bootstrap=n_bootstrap,
+        confidence=confidence,
+        p_value=p_value,
+    )
+
+
 def paired_bootstrap_ci(
     y_true: NDArray[np.int_],
     scores_a: NDArray[np.float64],
@@ -36,10 +127,12 @@ def paired_bootstrap_ci(
     n_bootstrap: int = 1000,
     confidence: float = 0.95,
     seed: int = 42,
+    metric_name: str | None = None,
 ) -> BootstrapResult:
     """Compute a paired bootstrap CI for the difference metric_fn(A) - metric_fn(B).
 
     Both models are evaluated on the same resampled rows to reduce variance.
+    Uses vectorized multinomial sampling for F1 and accuracy metrics.
 
     Args:
         y_true: True labels.
@@ -49,10 +142,25 @@ def paired_bootstrap_ci(
         n_bootstrap: Number of bootstrap iterations.
         confidence: Confidence level for the CI.
         seed: Random seed for reproducibility.
+        metric_name: Optional metric name ('f1', 'accuracy') to enable vectorization.
 
     Returns:
         BootstrapResult with the point estimate and confidence interval.
     """
+    if metric_name is None:
+        fn_name = getattr(metric_fn, "__name__", "")
+        if "accuracy" in fn_name:
+            metric_name = "accuracy"
+        elif "f1" in fn_name:
+            metric_name = "f1"
+
+    if metric_name in ("f1", "weighted_f1", "accuracy", "acc"):
+        vec_res = _vectorized_paired_bootstrap(
+            y_true, scores_a, scores_b, metric_name, n_bootstrap, confidence, seed
+        )
+        if vec_res is not None:
+            return vec_res
+
     rng = np.random.RandomState(seed)
     n = len(y_true)
     diffs = np.empty(n_bootstrap)

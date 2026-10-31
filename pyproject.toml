@@ -50,6 +50,7 @@ packages = ["src/modelgate"]
 testpaths = ["tests"]
 pythonpath = ["src"]
 addopts = "--cov=modelgate --cov-report=term-missing"
+asyncio_default_fixture_loop_scope = "function"
 
 [tool.ruff]
 target-version = "py311"

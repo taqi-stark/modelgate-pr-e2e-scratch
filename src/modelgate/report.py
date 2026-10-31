@@ -176,12 +176,18 @@ def build_html_report(
 
     lineage_html = ""
     if lineage:
+        dvc_row = (
+            f"<tr><td>DVC Hash</td><td><code>{lineage.dvc_hash}</code></td></tr>"
+            if lineage.dvc_hash
+            else ""
+        )
         lineage_html = f"""
         <h3>Lineage</h3>
         <table>
             <tr><td>Git SHA</td><td><code>{lineage.git_sha}</code></td></tr>
             <tr><td>Seed</td><td>{lineage.seed}</td></tr>
             <tr><td>Python</td><td>{lineage.python_version}</td></tr>
+            {dvc_row}
             <tr><td>Data Hashes</td><td><code>{json.dumps(lineage.data_hashes)}</code></td></tr>
         </table>"""
 

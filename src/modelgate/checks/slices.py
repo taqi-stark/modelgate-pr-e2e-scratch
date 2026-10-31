@@ -128,6 +128,7 @@ def run_slices_check(
                 n_bootstrap=config.n_bootstrap,
                 confidence=config.confidence,
                 seed=seed,
+                metric_name=config.metric,
             )
 
             p_values.append(bootstrap.p_value)
