@@ -1,0 +1,63 @@
+project: credit-risk-demo
+seed: 42
+
+model:
+  entrypoint: demo/train.py:build_model
+  task: classification
+
+data:
+  train: data/train.csv
+  test: data/test.csv
+  reference: data/reference.csv
+  target: default
+  schema: demo/contracts/schema.py:schema
+
+champion:
+  mlflow_alias: champion
+
+mlflow:
+  tracking_uri: sqlite:///mlflow.db
+  artifact_location: ./mlruns
+
+checks:
+  data_contract:
+    enabled: true
+    on_violation: fail
+  drift:
+    enabled: true
+    method: psi
+    warn_at: 0.1
+    fail_at: 0.25
+  slices:
+    enabled: true
+    metric: f1
+    by: [region, age_bucket, gender]
+    min_slice_size: 50
+    max_drop: 0.03
+    confidence: 0.95
+    n_bootstrap: 500
+  behavioral:
+    enabled: true
+    invariance:
+      - feature: applicant_id
+        perturb: random_id
+        max_flip_rate: 0.0
+    directional:
+      - feature: income
+        direction: increase
+        expect: prob_not_increase
+  budgets:
+    enabled: true
+    p95_latency_ms: 100
+    max_model_mb: 50
+    max_peak_mem_mb: 500
+  fairness:
+    enabled: true
+    protected: [gender]
+    metric: demographic_parity_diff
+    warn_at: 0.05
+    fail_at: 0.10
+
+verdict:
+  fail_if_any_fail: true
+  warn_requires_approval: true

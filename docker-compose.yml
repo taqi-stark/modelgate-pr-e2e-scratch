@@ -1,0 +1,65 @@
+version: "3.9"
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+      - ./modelgate.yaml:/app/modelgate.yaml
+      - modelgate-db:/app/db
+    environment:
+      - DATABASE_URL=sqlite:///db/modelgate.db
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+    depends_on:
+      - mlflow
+    command: uvicorn modelgate.api.main:app --host 0.0.0.0 --port 8000
+
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v2.9.2
+    ports:
+      - "5000:5000"
+    volumes:
+      - mlflow-data:/mlflow
+    command: >
+      mlflow server
+      --host 0.0.0.0
+      --port 5000
+      --backend-store-uri sqlite:///mlflow/mlflow.db
+      --default-artifact-root /mlflow/artifacts
+
+  dashboard:
+    build:
+      context: ./dashboard
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+    environment:
+      - VITE_API_URL=http://localhost:8000
+
+  seed:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: "no"
+    volumes:
+      - ./data:/app/data
+      - ./demo:/app/demo
+      - ./scripts:/app/scripts
+      - ./modelgate.yaml:/app/modelgate.yaml
+    environment:
+      - API_URL=http://api:8000
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+    depends_on:
+      - api
+      - mlflow
+    command: python scripts/seed.py
+
+volumes:
+  modelgate-db:
+  mlflow-data:

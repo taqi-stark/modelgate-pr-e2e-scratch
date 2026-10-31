@@ -1,0 +1,118 @@
+name: ModelGate Quality Gate
+
+on:
+  pull_request:
+    paths:
+      - 'demo/**'
+      - 'data/**'
+      - 'modelgate.yaml'
+      - 'src/**'
+
+permissions:
+  contents: read
+  pull-requests: write
+  statuses: write
+
+jobs:
+  modelgate:
+    name: Run ModelGate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install ModelGate
+        run: pip install -e ".[dev]"
+
+      - name: Generate demo data
+        run: python demo/train.py
+
+      - name: Run ModelGate
+        id: gate
+        run: |
+          modelgate run \
+            --config modelgate.yaml \
+            --branch "${{ github.head_ref }}" \
+            --pr "${{ github.event.pull_request.number }}" \
+            --output modelgate_output
+        continue-on-error: true
+
+      - name: Upload HTML report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: modelgate-report
+          path: modelgate_output/report.html
+
+      - name: Post PR comment
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const commentPath = 'modelgate_output/pr_comment.md';
+            if (!fs.existsSync(commentPath)) {
+              console.log('No PR comment file found');
+              return;
+            }
+            const body = fs.readFileSync(commentPath, 'utf8');
+            const marker = '<!-- modelgate-verdict -->';
+
+            // Find existing comment
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const existing = comments.find(c => c.body.includes(marker));
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body: `${marker}\n${body}`,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: `${marker}\n${body}`,
+              });
+            }
+
+      - name: Set commit status
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const verdictPath = 'modelgate_output/verdict.json';
+            if (!fs.existsSync(verdictPath)) {
+              console.log('No verdict file found');
+              return;
+            }
+            const verdict = JSON.parse(fs.readFileSync(verdictPath, 'utf8'));
+            const stateMap = { pass: 'success', warn: 'success', fail: 'failure' };
+
+            await github.rest.repos.createCommitStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: context.sha,
+              state: stateMap[verdict.status] || 'error',
+              description: verdict.summary.substring(0, 140),
+              context: 'modelgate',
+            });
+
+      - name: Fail if verdict is FAIL
+        if: steps.gate.outcome == 'failure'
+        run: exit 1
