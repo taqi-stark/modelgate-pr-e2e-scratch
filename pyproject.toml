@@ -7,7 +7,7 @@ name = "modelgate"
 version = "0.1.0"
 description = "CI/CD quality gate for machine learning models"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.10"
 license = { text = "MIT" }
 dependencies = [
     "typer>=0.9.0",
@@ -59,7 +59,7 @@ src = ["src", "tests"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "N", "W", "UP", "B", "SIM"]
-ignore = ["B008", "B904", "E501", "N803", "N806", "SIM105"]
+ignore = ["B008", "B904", "E501", "N803", "N806", "SIM105", "UP017"]
 
 [tool.mypy]
 python_version = "3.11"

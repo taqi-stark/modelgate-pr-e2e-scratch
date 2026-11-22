@@ -6,9 +6,11 @@ SQLModel tables for runs, check_results, approvals, and settings.
 from __future__ import annotations
 
 import json
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 
 from sqlmodel import Field, SQLModel
+
+UTC = timezone.utc
 
 
 class Run(SQLModel, table=True):

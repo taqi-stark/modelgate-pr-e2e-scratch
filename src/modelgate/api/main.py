@@ -9,7 +9,7 @@ from __future__ import annotations
 import json
 import os
 from contextlib import asynccontextmanager
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 from fastapi import Body, FastAPI, Header, HTTPException, Query
@@ -25,6 +25,8 @@ from modelgate.auth import (
     create_user,
     record_audit,
 )
+
+UTC = timezone.utc
 
 # Database setup (configurable via DATABASE_URL environment variable)
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///modelgate.db")

@@ -1,20 +1,26 @@
-FROM python:3.11-slim
+FROM ghcr.io/mlflow/mlflow:v2.9.2
 
 WORKDIR /app
 
-# Install system deps
-RUN apt-get update && apt-get install -y --no-install-recommends git && rm -rf /var/lib/apt/lists/*
-
-# Copy and install
-COPY pyproject.toml README.md ./
-COPY src/ src/
-
-RUN pip install --no-cache-dir -e .
+RUN pip install --no-cache-dir \
+    "typer>=0.9.0" \
+    "pydantic>=2.0.0" \
+    "pydantic-settings>=2.0.0" \
+    "pandera>=0.17.0" \
+    "fastapi>=0.104.0" \
+    "uvicorn>=0.24.0" \
+    "sqlmodel>=0.0.12" \
+    "httpx>=0.25.0" \
+    "rich>=13.0.0" \
+    "psutil>=5.9.0" && \
+    echo "/app/src" > /usr/local/lib/python3.10/site-packages/_modelgate.pth && \
+    printf '#!/usr/bin/env python\nfrom modelgate.cli import app\napp()\n' > /usr/local/bin/modelgate && \
+    chmod +x /usr/local/bin/modelgate
 
 COPY . .
 
-# Generate demo data
-RUN python demo/train.py || true
+# Generate demo data inside image (/app/data is persisted via named volume modelgate-data)
+RUN python demo/train.py
 
 EXPOSE 8000
 

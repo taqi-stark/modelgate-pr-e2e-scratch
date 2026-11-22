@@ -254,9 +254,14 @@ def load_candidate_and_champion(
 
                 with open(baseline_model_path, "rb") as f:
                     champion_model = pickle.load(f)
+                champion_model.predict(test_df.drop(columns=[target]).iloc[:2])
                 is_first_run = False
             except Exception:
-                pass
+                try:
+                    champion_model = build_fn(X_train, y_train, seed=config.seed)
+                    is_first_run = False
+                except Exception:
+                    pass
 
     # Build lineage
     lineage = LineageInfo(

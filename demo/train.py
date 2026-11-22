@@ -44,7 +44,9 @@ def generate_dataset(
     debt_ratio = rng.beta(2, 5, size=n_samples)
     employment_years = rng.exponential(5, size=n_samples).clip(0, 40).astype(int)
 
-    regions = rng.choice(["North", "South", "East", "West"], size=n_samples, p=[0.25, 0.30, 0.25, 0.20])
+    regions = rng.choice(
+        ["North", "South", "East", "West"], size=n_samples, p=[0.25, 0.30, 0.25, 0.20]
+    )
     genders = rng.choice(["male", "female"], size=n_samples, p=[0.55, 0.45])
     applicant_ids = np.arange(1, n_samples + 1)
 
@@ -68,18 +70,20 @@ def generate_dataset(
     prob = 1 / (1 + np.exp(-logit))
     default = (rng.random(n_samples) < prob).astype(int)
 
-    df = pd.DataFrame({
-        "applicant_id": applicant_ids,
-        "income": np.round(income, 2),
-        "age": age,
-        "credit_score": credit_score,
-        "debt_ratio": np.round(debt_ratio, 4),
-        "employment_years": employment_years,
-        "region": regions,
-        "age_bucket": age_bucket,
-        "gender": genders,
-        "default": default,
-    })
+    df = pd.DataFrame(
+        {
+            "applicant_id": applicant_ids,
+            "income": np.round(income, 2),
+            "age": age,
+            "credit_score": credit_score,
+            "debt_ratio": np.round(debt_ratio, 4),
+            "employment_years": employment_years,
+            "region": regions,
+            "age_bucket": age_bucket,
+            "gender": genders,
+            "default": default,
+        }
+    )
 
     return df
 
@@ -106,7 +110,8 @@ def build_model(
     """
     cat_cols = [c for c in ["region", "age_bucket", "gender"] if c in X_train.columns]
     num_cols = [
-        c for c in ["income", "age", "credit_score", "debt_ratio", "employment_years"]
+        c
+        for c in ["income", "age", "credit_score", "debt_ratio", "employment_years"]
         if c in X_train.columns
     ]
 
@@ -118,16 +123,21 @@ def build_model(
         remainder="drop",
     )
 
-    pipeline = Pipeline([
-        ("preprocessor", preprocessor),
-        ("classifier", GradientBoostingClassifier(
-            n_estimators=50,
-            max_depth=3,
-            learning_rate=0.1,
-            subsample=0.8,
-            random_state=seed,
-        )),
-    ])
+    pipeline = Pipeline(
+        [
+            ("preprocessor", preprocessor),
+            (
+                "classifier",
+                GradientBoostingClassifier(
+                    n_estimators=50,
+                    max_depth=3,
+                    learning_rate=0.1,
+                    subsample=0.8,
+                    random_state=seed,
+                ),
+            ),
+        ]
+    )
     pipeline.fit(X_train, y_train)
     return pipeline
 

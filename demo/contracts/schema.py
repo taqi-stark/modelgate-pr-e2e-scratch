@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
-import pandera.pandas as pa
-from pandera.pandas import Check, Column, DataFrameSchema
+try:
+    from pandera.pandas import Check, Column, DataFrameSchema
+except ImportError:
+    from pandera import Check, Column, DataFrameSchema  # type: ignore[no-redef]
 
 schema = DataFrameSchema(
     {

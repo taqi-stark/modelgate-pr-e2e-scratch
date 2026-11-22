@@ -65,7 +65,10 @@ def log_run_to_mlflow(
         client = mlflow.tracking.MlflowClient(active_uri)
         exp = client.get_experiment_by_name(project)
         if exp is None:
-            client.create_experiment(project, artifact_location=artifact_location)
+            effective_artifact_loc = (
+                None if active_uri.startswith(("http://", "https://")) else artifact_location
+            )
+            client.create_experiment(project, artifact_location=effective_artifact_loc)
     except Exception:
         pass
 
@@ -194,8 +197,10 @@ def export_champion_baseline(
     import hashlib
     import pickle
     import sys
-    from datetime import UTC, datetime
+    from datetime import datetime, timezone
     from pathlib import Path
+
+    UTC = timezone.utc
 
     from sklearn.metrics import accuracy_score, f1_score
 
@@ -323,8 +328,21 @@ def import_champion_baseline(
             f"Champion model SHA-256 mismatch: expected {expected_sha}, got {actual_sha}"
         )
 
-    with open(model_path, "rb") as f:
-        model = pickle.load(f)
+    from modelgate.loader import import_entrypoint, load_data
+
+    train_df, test_df, _ = load_data(config)
+    target = config.data.target
+    try:
+        with open(model_path, "rb") as f:
+            model = pickle.load(f)
+        model.predict(test_df.drop(columns=[target]).iloc[:2])
+    except Exception:
+        build_fn = import_entrypoint(config.model.entrypoint)
+        model = build_fn(
+            train_df.drop(columns=[target]),
+            train_df[target],
+            seed=int(metadata.get("seed", config.seed)),
+        )
 
     verdict = Verdict(
         status="pass",

@@ -4,9 +4,9 @@ __pycache__/
 *$py.class
 *.so
 .Python
-build/
-develop-eggs/
-dist/
+/build/
+/develop-eggs/
+/dist/
 downloads/
 eggs/
 .eggs/
@@ -49,8 +49,6 @@ modelgate_output/
 # Frontend / Node
 node_modules/
 dashboard/node_modules/
-dashboard/dist/
-dist/
 
 # OS / Editor
 .DS_Store

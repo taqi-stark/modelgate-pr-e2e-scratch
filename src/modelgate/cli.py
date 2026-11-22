@@ -282,8 +282,15 @@ def run(
 
         api_url = os.getenv("API_URL", "http://localhost:8000").rstrip("/")
         api_token = os.getenv("MODELGATE_API_TOKEN") or os.getenv("MODELGATE_ADMIN_TOKEN", "")
-        headers = {"Authorization": f"Bearer {api_token}"} if api_token else {}
-        resp = httpx.post(f"{api_url}/runs", json=json_payload, headers=headers, timeout=5)
+        headers = {"Content-Type": "application/json"}
+        if api_token:
+            headers["Authorization"] = f"Bearer {api_token}"
+        resp = httpx.post(
+            f"{api_url}/runs",
+            content=json.dumps(json_payload, default=str),
+            headers=headers,
+            timeout=5,
+        )
         if resp.status_code == 200:
             console.print("[dim]Run posted to API[/dim]")
     except Exception:

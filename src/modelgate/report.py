@@ -6,11 +6,13 @@ Produces Markdown PR comments, JSON payloads, and HTML reports.
 from __future__ import annotations
 
 import json
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from modelgate.loader import LineageInfo
 from modelgate.verdict import Verdict
+
+UTC = timezone.utc
 
 
 def build_pr_comment(
@@ -119,12 +121,14 @@ def build_json_payload(
         payload["run_id"] = run_id
 
     if lineage is not None:
+        safe_hyperparams = json.loads(json.dumps(lineage.hyperparameters, default=str))
         payload["lineage"] = {
             "git_sha": lineage.git_sha,
             "data_hashes": lineage.data_hashes,
+            "dvc_hash": lineage.dvc_hash,
             "python_version": lineage.python_version,
             "seed": lineage.seed,
-            "hyperparameters": lineage.hyperparameters,
+            "hyperparameters": safe_hyperparams,
         }
 
     return payload

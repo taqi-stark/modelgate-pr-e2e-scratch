@@ -1,5 +1,5 @@
 name: 'ModelGate Quality Gate'
-description: 'Production CI/CD quality gate for ML models: data contracts, drift, slice regression, behavioral tests, latency/size budgets, and fairness.'
+description: 'Production CI/CD quality gate for ML models: data contracts, drift, leakage, label shift, slice regression, behavioral tests, latency/size budgets, and fairness.'
 author: 'ModelGate Authors'
 
 inputs:
@@ -15,6 +15,14 @@ inputs:
     description: 'Directory to store generated reports and PR comments'
     required: false
     default: 'modelgate_output'
+  baseline-dir:
+    description: 'Directory containing persisted champion baseline (model.pkl, metadata.json, metrics.json)'
+    required: false
+    default: 'champion'
+  setup-data:
+    description: 'Command to prepare data on a clean checkout when data/train.csv is absent (e.g. dvc pull or python demo/train.py)'
+    required: false
+    default: 'python demo/train.py'
   fail-on-verdict:
     description: 'Fail the GitHub Actions workflow step if the verdict is FAIL'
     required: false
@@ -48,6 +56,20 @@ runs:
         python -m pip install --upgrade pip
         pip install -e .
 
+    - name: Prepare Data & Import Champion Baseline
+      shell: bash
+      run: |
+        if [ ! -f "data/train.csv" ]; then
+          if [ -s ".dvc/config" ] && command -v dvc >/dev/null 2>&1; then
+            dvc pull
+          elif [ -n "${{ inputs.setup-data }}" ]; then
+            ${{ inputs.setup-data }}
+          fi
+        fi
+        if [ -f "${{ inputs.baseline-dir }}/model.pkl" ]; then
+          modelgate baseline import --config "${{ inputs.config }}" --dir "${{ inputs.baseline-dir }}"
+        fi
+
     - name: Run Quality Gate Checks
       id: gate
       shell: bash
@@ -70,11 +92,13 @@ runs:
           SUMMARY=$(python -c "import json; v = json.load(open('${{ inputs.output-dir }}/verdict.json')); print(v.get('summary', ''))")
         else
           STATUS="fail"
-          SUMMARY="Quality gate execution did not produce verdict.json"
+          SUMMARY="Quality gate execution failed (exit ${GATE_EXIT}) and did not produce verdict.json"
         fi
 
-        echo "verdict=$STATUS" >> "$GITHUB_OUTPUT"
-        echo "summary=$SUMMARY" >> "$GITHUB_OUTPUT"
+        if [ -n "${GITHUB_OUTPUT:-}" ]; then
+          echo "verdict=$STATUS" >> "$GITHUB_OUTPUT"
+          echo "summary=$SUMMARY" >> "$GITHUB_OUTPUT"
+        fi
 
         if [ "${{ inputs.fail-on-verdict }}" = "true" ] && [ "$STATUS" = "fail" ]; then
           echo "::error::ModelGate quality gate failed: $SUMMARY"
