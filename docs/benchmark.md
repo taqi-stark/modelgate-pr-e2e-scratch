@@ -1,7 +1,14 @@
 # ModelGate Benchmark Results
 
-Fault injection benchmark comparing ModelGate against an accuracy-only baseline.
-Each fault type was evaluated across 30 independent seeds.
+Single source of truth for the ModelGate fault-injection benchmark comparing ModelGate against an accuracy-only baseline.
+
+## Reproducibility Metadata
+
+- **Command**: `modelgate bench`
+- **Commit Hash**: `3ba8ba9`
+- **Evaluated Seeds**: `1000..1029` (N=30: `1000, 1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009, 1010, 1011, 1012, 1013, 1014, 1015, 1016, 1017, 1018, 1019, 1020, 1021, 1022, 1023, 1024, 1025, 1026, 1027, 1028, 1029`)
+- **No-op False-Positive Rate (ModelGate)**: **0/30 (0.0% FP, Wilson 95% CI [0.0%, 11.4%])**
+- **No-op False-Positive Rate (Baseline)**: **0/30 (0.0% FP, Wilson 95% CI [0.0%, 11.4%])**
 
 ## Detection Rates
 
@@ -17,8 +24,8 @@ Each fault type was evaluated across 30 independent seeds.
 
 ## Methodology
 
-Each fault is injected 30 times with different random seeds. ModelGate executes data contract, drift, slice regression, behavioral, performance budgets, and fairness checks. Confidence intervals are calculated using the Wilson score interval at 95% confidence level.
+Each fault is injected across 30 independent random seeds (`1000..1029`). For each seed `s`, training data (`N=3000`) is generated with `RandomState(s)` and held-out test data (`N=1500`) with `RandomState(s + 1000)`. Confidence intervals are calculated using the Wilson score interval at the 95% confidence level (`z = 1.95996`).
 
-The accuracy-only baseline fails only if overall accuracy drops more than 1 percentage point (|acc_champ - acc_cand| > 0.01).
+The accuracy-only baseline flags a regression only if overall test accuracy changes by more than 1 percentage point (`|acc_champ - acc_cand| > 0.01`).
 
-For the `noop` control (retraining with a different seed), lower detection rates represent fewer false positives.
+For the `noop` control (retraining the identical pipeline with candidate seed `s + 500`), lower detection rates represent fewer false positives.

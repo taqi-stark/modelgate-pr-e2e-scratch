@@ -313,12 +313,35 @@ def wilson_ci(k: int, n: int, z: float = 1.95996) -> tuple[float, float]:
     return float(lower), float(upper)
 
 
-def run_benchmark(console: Console, n_seeds: int = 30) -> dict[str, Any]:
+def _get_git_commit() -> str:
+    """Return short git commit hash (or 'unknown' if unavailable)."""
+    import subprocess
+
+    try:
+        res = subprocess.run(
+            ["git", "rev-parse", "--short", "HEAD"],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        return res.stdout.strip()
+    except Exception:
+        return "unknown"
+
+
+def run_benchmark(
+    console: Console,
+    n_seeds: int = 30,
+    start_seed: int = 1000,
+    command_str: str = "modelgate bench",
+) -> dict[str, Any]:
     """Run the full fault injection benchmark.
 
     Args:
         console: Rich console for output.
         n_seeds: Number of seeds per fault type.
+        start_seed: First random seed in the contiguous range [start_seed, start_seed + n_seeds - 1].
+        command_str: Command used to invoke the benchmark.
 
     Returns:
         Benchmark results dict.
@@ -333,6 +356,8 @@ def run_benchmark(console: Console, n_seeds: int = 30) -> dict[str, Any]:
         "noop",
     ]
 
+    seeds = [start_seed + i for i in range(n_seeds)]
+    commit_hash = _get_git_commit()
     all_results: list[dict] = []
     summary: dict[str, dict] = {}
 
@@ -343,8 +368,7 @@ def run_benchmark(console: Console, n_seeds: int = 30) -> dict[str, Any]:
         mg_detected = 0
         bl_detected = 0
 
-        for i in range(n_seeds):
-            seed = 1000 + i
+        for seed in seeds:
             try:
                 result = run_single_trial(fault, seed)
                 all_results.append(result)
@@ -413,9 +437,13 @@ def run_benchmark(console: Console, n_seeds: int = 30) -> dict[str, Any]:
 
     # Save results
     results_data = {
+        "command": command_str,
+        "commit_hash": commit_hash,
+        "n_seeds": n_seeds,
+        "seed_range": f"{seeds[0]}..{seeds[-1]}" if seeds else "",
+        "seeds": seeds,
         "summary": summary,
         "details": all_results,
-        "n_seeds": n_seeds,
     }
 
     docs_dir = Path("docs")
@@ -423,7 +451,13 @@ def run_benchmark(console: Console, n_seeds: int = 30) -> dict[str, Any]:
     (docs_dir / "benchmark_results.json").write_text(json.dumps(results_data, indent=2))
 
     # Generate markdown
-    _generate_benchmark_markdown(summary, docs_dir / "benchmark.md")
+    _generate_benchmark_markdown(
+        summary,
+        docs_dir / "benchmark.md",
+        commit_hash=commit_hash,
+        seeds=seeds,
+        command_str=command_str,
+    )
 
     console.print(
         "\n[green]Results saved to docs/benchmark_results.json and docs/benchmark.md[/green]"
@@ -432,13 +466,39 @@ def run_benchmark(console: Console, n_seeds: int = 30) -> dict[str, Any]:
     return results_data
 
 
-def _generate_benchmark_markdown(summary: dict, path: Path) -> None:
-    """Generate benchmark.md report with exact counts and Wilson 95% CIs."""
+def _generate_benchmark_markdown(
+    summary: dict,
+    path: Path,
+    commit_hash: str = "unknown",
+    seeds: list[int] | None = None,
+    command_str: str = "modelgate bench",
+) -> None:
+    """Generate benchmark.md report with exact counts, metadata, and Wilson 95% CIs."""
+    if seeds is None:
+        n_default = next(iter(summary.values()), {}).get("n_trials", 30)
+        seeds = [1000 + i for i in range(n_default)]
+    seed_range_str = f"`{seeds[0]}..{seeds[-1]}` (N={len(seeds)}: `{', '.join(map(str, seeds))}`)"
+    noop = summary.get("noop", {})
+    noop_mg_k = noop.get("mg_detected", 0)
+    noop_n = noop.get("n_trials", len(seeds))
+    noop_mg_rate = noop.get("modelgate_detection_rate", 0.0)
+    noop_mg_ci = noop.get("modelgate_ci_95", [0.0, 0.114])
+    noop_bl_k = noop.get("bl_detected", 0)
+    noop_bl_rate = noop.get("baseline_detection_rate", 0.0)
+    noop_bl_ci = noop.get("baseline_ci_95", [0.0, 0.114])
+
     lines = [
         "# ModelGate Benchmark Results",
         "",
-        "Fault injection benchmark comparing ModelGate against an accuracy-only baseline.",
-        "Each fault type was evaluated across 30 independent seeds.",
+        "Single source of truth for the ModelGate fault-injection benchmark comparing ModelGate against an accuracy-only baseline.",
+        "",
+        "## Reproducibility Metadata",
+        "",
+        f"- **Command**: `{command_str}`",
+        f"- **Commit Hash**: `{commit_hash}`",
+        f"- **Evaluated Seeds**: {seed_range_str}",
+        f"- **No-op False-Positive Rate (ModelGate)**: **{noop_mg_k}/{noop_n} ({noop_mg_rate:.1%} FP, Wilson 95% CI [{noop_mg_ci[0]:.1%}, {noop_mg_ci[1]:.1%}])**",
+        f"- **No-op False-Positive Rate (Baseline)**: **{noop_bl_k}/{noop_n} ({noop_bl_rate:.1%} FP, Wilson 95% CI [{noop_bl_ci[0]:.1%}, {noop_bl_ci[1]:.1%}])**",
         "",
         "## Detection Rates",
         "",
@@ -483,14 +543,14 @@ def _generate_benchmark_markdown(summary: dict, path: Path) -> None:
             "",
             "## Methodology",
             "",
-            "Each fault is injected 30 times with different random seeds. "
-            "ModelGate executes data contract, drift, slice regression, behavioral, performance budgets, and fairness checks. "
-            "Confidence intervals are calculated using the Wilson score interval at 95% confidence level.",
+            f"Each fault is injected across {len(seeds)} independent random seeds (`{seeds[0]}..{seeds[-1]}`). "
+            "For each seed `s`, training data (`N=3000`) is generated with `RandomState(s)` and held-out test data (`N=1500`) with `RandomState(s + 1000)`. "
+            "Confidence intervals are calculated using the Wilson score interval at the 95% confidence level (`z = 1.95996`).",
             "",
-            "The accuracy-only baseline fails only if overall accuracy drops more than 1 percentage point (|acc_champ - acc_cand| > 0.01).",
+            "The accuracy-only baseline flags a regression only if overall test accuracy changes by more than 1 percentage point (`|acc_champ - acc_cand| > 0.01`).",
             "",
-            "For the `noop` control (retraining with a different seed), lower detection rates represent fewer false positives.",
+            "For the `noop` control (retraining the identical pipeline with candidate seed `s + 500`), lower detection rates represent fewer false positives.",
         ]
     )
 
-    path.write_text("\n".join(lines))
+    path.write_text("\n".join(lines) + "\n")
