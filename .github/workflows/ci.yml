@@ -53,10 +53,7 @@ jobs:
         run: |
           pytest tests/unit/ -v \
             -o addopts="" \
-            --cov=modelgate.stats \
-            --cov=modelgate.verdict \
-            --cov=modelgate.config \
-            --cov=modelgate.report \
+            --cov=modelgate \
             --cov-report=term-missing \
             --cov-report=xml:coverage.xml \
             --cov-fail-under=85

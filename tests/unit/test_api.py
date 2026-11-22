@@ -111,3 +111,110 @@ def test_settings_endpoints(client: TestClient) -> None:
     )
     assert update_resp.status_code == 200
     assert update_resp.json()["status"] == "saved"
+
+    # Second update modifies existing settings record
+    update_resp2 = client.put(
+        "/settings", json={"config": {"checks": {"budgets": {"p95_latency_ms": 50.0}}}}
+    )
+    assert update_resp2.status_code == 200
+    get_resp2 = client.get("/settings")
+    assert get_resp2.json()["config"]["checks"]["budgets"]["p95_latency_ms"] == 50.0
+
+
+def test_slices_compare_models_bench_and_users_endpoints(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("MODELGATE_ADMIN_TOKEN", "env-boot-token-123")
+    # Create two runs (one with slices check, one fail run)
+    run1 = client.post(
+        "/runs",
+        json={
+            "project": "p1",
+            "branch": "main",
+            "verdict": {
+                "status": "pass",
+                "summary": "ok",
+                "check_results": [
+                    {
+                        "name": "slices",
+                        "status": "pass",
+                        "summary": "ok",
+                        "metrics": {"f1": 0.90},
+                        "details": {"slices": [{"slice": "region=North"}], "worst_5": []},
+                    }
+                ],
+            },
+        },
+    ).json()
+    run2 = client.post(
+        "/runs",
+        json={
+            "project": "p1",
+            "branch": "feat",
+            "verdict": {
+                "status": "fail",
+                "summary": "bad",
+                "check_results": [
+                    {
+                        "name": "slices",
+                        "status": "fail",
+                        "summary": "drop",
+                        "metrics": {"f1": 0.80},
+                        "details": {"slices": [], "worst_5": []},
+                    }
+                ],
+            },
+        },
+    ).json()
+
+    # Filters on list_runs
+    assert len(client.get("/runs?status=pass&branch=main&project=p1").json()) == 1
+    assert client.get("/runs/99999").status_code == 404
+
+    # Slices endpoint
+    s_resp = client.get(f"/runs/{run1['id']}/slices")
+    assert s_resp.status_code == 200
+    assert len(s_resp.json()["slices"]) == 1
+    assert client.get("/runs/99999/slices").status_code == 404
+
+    # Compare endpoint
+    c_resp = client.get(f"/compare?a={run1['id']}&b={run2['id']}")
+    assert c_resp.status_code == 200
+    assert abs(c_resp.json()["metrics"][0]["delta"] - (-0.10)) < 1e-6
+    assert client.get("/compare?a=1&b=99999").status_code == 404
+
+    # Override comment too short (<20 chars) -> 400
+    short_override = client.post(
+        f"/runs/{run2['id']}/approve",
+        json={"decision": "approve", "comment": "too short"},
+    )
+    assert short_override.status_code == 400
+    assert (
+        client.post(
+            "/runs/99999/approve", json={"decision": "approve", "comment": "ok"}
+        ).status_code
+        == 404
+    )
+
+    # Promote FAIL run without approval -> 400; promote PASS run -> 200; promote 404
+    assert client.post(f"/runs/{run2['id']}/promote").status_code == 400
+    assert client.post(f"/runs/{run1['id']}/promote").status_code == 200
+    assert client.post("/runs/99999/promote").status_code == 404
+
+    # Models & bench endpoints
+    models_resp = client.get("/models?project=p1")
+    assert models_resp.status_code == 200
+    assert len(models_resp.json()) == 1
+    assert client.get("/bench").status_code == 200
+
+    # Users endpoints
+    u_create = client.post("/users", json={"name": "new_rev", "role": "reviewer"})
+    assert u_create.status_code == 200
+    assert "token" in u_create.json()
+    # Update existing user role
+    u_update = client.post("/users", json={"name": "new_rev", "role": "admin"})
+    assert u_update.status_code == 200
+    assert client.post("/users", json={"name": "x", "role": "bad_role"}).status_code == 400
+    u_list = client.get("/users")
+    assert u_list.status_code == 200
+    assert any(u["name"] == "new_rev" for u in u_list.json())

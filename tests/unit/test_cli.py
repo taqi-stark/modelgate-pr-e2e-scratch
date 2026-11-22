@@ -6,6 +6,7 @@ import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock
 
+import pytest
 from typer.testing import CliRunner
 
 from modelgate.cli import app
@@ -173,3 +174,123 @@ def test_cli_reproduce_success(monkeypatch) -> None:
     assert result.exit_code == 0
     assert "Reproducing run" in result.stdout
     assert "Seed: 42" in result.stdout
+
+
+def test_cli_run_fail_verdict_and_invalid_config(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from modelgate.loader import LineageInfo, LoadResult
+    from modelgate.verdict import CheckResult, Reason, Verdict
+
+    bad_cfg = tmp_path / "bad.yaml"
+    bad_cfg.write_text("seed: -5\n")
+    res_bad = runner.invoke(app, ["run", "--config", str(bad_cfg)])
+    assert res_bad.exit_code == 1
+
+    # Load failure
+    monkeypatch.setattr(
+        "modelgate.loader.load_candidate_and_champion",
+        lambda cfg: (_ for _ in ()).throw(RuntimeError("load crash")),
+    )
+    res_crash = runner.invoke(app, ["run", "--config", "modelgate.yaml"])
+    assert res_crash.exit_code == 1
+
+    # Failing verdict with reasons and API post
+    dummy_lineage = LineageInfo(git_sha="abc", data_hashes={"train": "h"}, seed=42)
+    fail_verdict = Verdict(
+        status="fail",
+        reasons=[Reason(check_name="drift", severity="fail", message="PSI high")],
+        check_results=[CheckResult(name="drift", status="fail", summary="PSI high")],
+        summary="1 check failed",
+    )
+    dummy_load = LoadResult(
+        candidate_model=MagicMock(),
+        champion_model=None,
+        train_df=MagicMock(),
+        test_df=MagicMock(),
+        reference_df=MagicMock(),
+        target_column="default",
+        train_time_s=0.1,
+        lineage=dummy_lineage,
+        is_first_run=True,
+    )
+    monkeypatch.setattr("modelgate.loader.load_candidate_and_champion", lambda cfg: dummy_load)
+    for mod_fn in [
+        "modelgate.checks.data_contract.run_data_contract_check",
+        "modelgate.checks.drift.run_drift_check",
+        "modelgate.checks.leakage.run_leakage_check",
+        "modelgate.checks.label_shift.run_label_shift_check",
+        "modelgate.checks.slices.run_slices_check",
+        "modelgate.checks.behavioral.run_behavioral_check",
+        "modelgate.checks.budgets.run_budgets_check",
+        "modelgate.checks.fairness.run_fairness_check",
+    ]:
+        monkeypatch.setattr(
+            mod_fn, lambda *a, **kw: CheckResult(name="c", status="fail", summary="bad")
+        )
+    monkeypatch.setattr("modelgate.verdict.compute_verdict", lambda results, cfg=None: fail_verdict)
+    monkeypatch.setattr("modelgate.registry.log_run_to_mlflow", lambda *a, **kw: "run-fail-1")
+    monkeypatch.setattr("httpx.post", lambda *a, **kw: MagicMock(status_code=200))
+
+    out_dir = tmp_path / "fail_out"
+    res_fail = runner.invoke(app, ["run", "--config", "modelgate.yaml", "--output", str(out_dir)])
+    assert res_fail.exit_code == 1
+    assert "FAIL" in res_fail.stdout
+
+
+def test_cli_compare_and_promote_api_branches(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        "httpx.get",
+        lambda url, **kw: MagicMock(
+            status_code=200,
+            json=lambda: {
+                "metrics": [{"name": "acc", "value_a": 0.9, "value_b": 0.92, "delta": 0.02}]
+            },
+        ),
+    )
+    res_cmp = runner.invoke(app, ["compare", "1", "2"])
+    assert res_cmp.exit_code == 0
+    assert "acc" in res_cmp.stdout
+
+    monkeypatch.setattr("httpx.get", lambda url, **kw: MagicMock(status_code=500))
+    res_cmp_err = runner.invoke(app, ["compare", "1", "2"])
+    assert res_cmp_err.exit_code == 0
+    assert "API error" in res_cmp_err.stdout
+
+
+def test_cli_bench_serve_baseline_and_users(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr("modelgate.benchmark.run_benchmark", lambda console: {})
+    assert runner.invoke(app, ["bench"]).exit_code == 0
+
+    monkeypatch.setattr("uvicorn.run", lambda *a, **kw: None)
+    assert runner.invoke(app, ["serve", "--port", "8123"]).exit_code == 0
+
+    monkeypatch.setattr(
+        "modelgate.registry.export_champion_baseline",
+        lambda cfg, baseline_dir="champion": {
+            "baseline_dir": str(baseline_dir),
+            "metadata": {"source": "mlflow", "model_sha256": "abcdef1234567890"},
+            "metrics": {"accuracy": 0.91, "f1": 0.88},
+        },
+    )
+    assert runner.invoke(app, ["baseline", "export"]).exit_code == 0
+
+    monkeypatch.setattr(
+        "modelgate.registry.import_champion_baseline",
+        lambda cfg, baseline_dir="champion": {
+            "baseline_dir": str(baseline_dir),
+            "run_id": "r1",
+            "promoted": True,
+            "metrics": {"accuracy": 0.91, "f1": 0.88},
+        },
+    )
+    assert runner.invoke(app, ["baseline", "import"]).exit_code == 0
+
+    # users add / list
+    assert runner.invoke(app, ["users", "add", "bad_user", "--role", "superadmin"]).exit_code == 1
+    assert runner.invoke(app, ["users", "add", "cli_eng", "--role", "engineer"]).exit_code == 0
+    res_list = runner.invoke(app, ["users", "list"])
+    assert res_list.exit_code == 0
+    assert "cli_eng" in res_list.stdout

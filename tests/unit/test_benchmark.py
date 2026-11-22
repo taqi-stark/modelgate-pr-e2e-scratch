@@ -32,3 +32,52 @@ def test_run_single_trial_noop() -> None:
     assert res["fault_type"] == "noop"
     assert "modelgate_detected" in res
     assert "baseline_detected" in res
+
+
+def test_group_threshold_model_and_markdown_gen(tmp_path, monkeypatch) -> None:
+    from rich.console import Console
+    from sklearn.linear_model import LogisticRegression
+
+    from modelgate.benchmark import (
+        GroupThresholdModel,
+        _generate_benchmark_markdown,
+        run_benchmark,
+        wilson_ci,
+    )
+
+    assert wilson_ci(0, 0) == (0.0, 0.0)
+    lo, hi = wilson_ci(30, 30)
+    assert lo > 0.88 and hi == 1.0
+
+    train_df, test_df = _generate_data(seed=42, n=60)
+    X_num = train_df[["income", "age", "credit_score"]]
+    clf = LogisticRegression(max_iter=200).fit(X_num, train_df["default"])
+
+    class BaseWrap:
+        def predict_proba(self, X: pd.DataFrame):
+            return clf.predict_proba(X[["income", "age", "credit_score"]])
+
+    gtm = GroupThresholdModel(BaseWrap(), "gender", "female", 0.05, 0.95)
+    assert gtm.predict_proba(test_df).shape == (len(test_df), 2)
+    assert len(gtm.predict(test_df)) == len(test_df)
+    assert len(gtm.predict(test_df.drop(columns=["gender"]))) == len(test_df)
+
+    md_path = tmp_path / "bench.md"
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        "modelgate.benchmark.run_single_trial",
+        lambda fault, seed: {
+            "fault_type": fault,
+            "seed": seed,
+            "modelgate_detected": fault != "noop",
+            "modelgate_status": "fail" if fault != "noop" else "pass",
+            "baseline_detected": False,
+            "champion_acc": 0.9,
+            "candidate_acc": 0.9,
+        },
+    )
+    res = run_benchmark(Console(), n_seeds=2, start_seed=1000)
+    assert res["n_seeds"] == 2
+    assert (tmp_path / "docs" / "benchmark.md").exists()
+    _generate_benchmark_markdown(res["summary"], md_path, commit_hash="abc1234", seeds=None)
+    assert md_path.exists()
