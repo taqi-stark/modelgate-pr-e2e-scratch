@@ -496,6 +496,57 @@ users_app = typer.Typer(
 )
 app.add_typer(users_app, name="users")
 
+baseline_app = typer.Typer(
+    name="baseline",
+    help="Export or import persisted champion baseline (champion/ folder + metadata + metrics).",
+    no_args_is_help=True,
+)
+app.add_typer(baseline_app, name="baseline")
+
+
+@baseline_app.command("export")
+def baseline_export(
+    config: str = typer.Option("modelgate.yaml", "--config", "-c", help="Config file path"),
+    dir_path: str = typer.Option("champion", "--dir", "-d", help="Champion baseline directory"),
+) -> None:
+    """Export champion model, metadata, and metrics to champion/ folder."""
+    from modelgate.config import load_config
+    from modelgate.registry import export_champion_baseline
+
+    try:
+        cfg = load_config(config)
+        res = export_champion_baseline(cfg, baseline_dir=dir_path)
+        console.print(
+            f"[green]✓ Exported champion baseline to {res['baseline_dir']}/[/green]\n"
+            f"  Source: {res['metadata']['source']}  SHA-256: {res['metadata']['model_sha256'][:12]}\n"
+            f"  Metrics: accuracy={res['metrics']['accuracy']:.4f}, f1={res['metrics']['f1']:.4f}"
+        )
+    except Exception as e:
+        console.print(f"[red]Failed to export champion baseline:[/red] {e}")
+        raise typer.Exit(1)
+
+
+@baseline_app.command("import")
+def baseline_import(
+    config: str = typer.Option("modelgate.yaml", "--config", "-c", help="Config file path"),
+    dir_path: str = typer.Option("champion", "--dir", "-d", help="Champion baseline directory"),
+) -> None:
+    """Import champion model, metadata, and metrics from champion/ into MLflow registry."""
+    from modelgate.config import load_config
+    from modelgate.registry import import_champion_baseline
+
+    try:
+        cfg = load_config(config)
+        res = import_champion_baseline(cfg, baseline_dir=dir_path)
+        console.print(
+            f"[green]✓ Imported champion baseline from {res['baseline_dir']}/[/green]\n"
+            f"  MLflow run: {res['run_id']}  Promoted to @{cfg.champion.mlflow_alias}: {res['promoted']}\n"
+            f"  Metrics: accuracy={res['metrics'].get('accuracy', 0.0):.4f}, f1={res['metrics'].get('f1', 0.0):.4f}"
+        )
+    except Exception as e:
+        console.print(f"[red]Failed to import champion baseline:[/red] {e}")
+        raise typer.Exit(1)
+
 
 @users_app.command("add")
 def users_add(

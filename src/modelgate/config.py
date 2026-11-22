@@ -41,6 +41,7 @@ class ChampionConfig(BaseModel):
     """Champion model configuration."""
 
     mlflow_alias: str = "champion"
+    baseline_dir: str = "champion"
 
 
 class MLflowConfig(BaseModel):

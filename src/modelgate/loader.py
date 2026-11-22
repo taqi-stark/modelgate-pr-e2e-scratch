@@ -220,7 +220,7 @@ def load_candidate_and_champion(
     candidate_model = build_fn(X_train, y_train, seed=config.seed)
     train_time = time.time() - start
 
-    # Try to load champion from MLflow
+    # Try to load champion from MLflow, falling back to persisted champion/ baseline folder
     champion_model = None
     is_first_run = True
     try:
@@ -228,10 +228,10 @@ def load_candidate_and_champion(
 
         import mlflow
 
-        active_uri = os.environ.get("MLFLOW_TRACKING_URI", config.mlflow.tracking_uri)
+        env_uri = os.environ.get("MLFLOW_TRACKING_URI", "").strip()
+        active_uri = env_uri or config.mlflow.tracking_uri
         mlflow.set_tracking_uri(active_uri)
         client = mlflow.tracking.MlflowClient(active_uri)
-        # Try to get the champion model
         model_name = config.project
         try:
             client.get_model_version_by_alias(model_name, config.champion.mlflow_alias)
@@ -240,10 +240,23 @@ def load_candidate_and_champion(
             )
             is_first_run = False
         except Exception:
-            # No champion yet - first run
             is_first_run = True
     except ImportError:
         is_first_run = True
+
+    if champion_model is None:
+        baseline_model_path = (
+            Path(getattr(config.champion, "baseline_dir", "champion")) / "model.pkl"
+        )
+        if baseline_model_path.exists():
+            try:
+                import pickle
+
+                with open(baseline_model_path, "rb") as f:
+                    champion_model = pickle.load(f)
+                is_first_run = False
+            except Exception:
+                pass
 
     # Build lineage
     lineage = LineageInfo(

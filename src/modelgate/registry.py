@@ -16,11 +16,12 @@ logger = logging.getLogger(__name__)
 
 
 def _get_active_tracking_uri(tracking_uri: str | None = None) -> str:
-    """Resolve active MLflow tracking URI."""
+    """Resolve active MLflow tracking URI (MLFLOW_TRACKING_URI env var overrides config)."""
+    env_uri = os.environ.get("MLFLOW_TRACKING_URI", "").strip()
+    if env_uri:
+        return env_uri
     if tracking_uri:
         return tracking_uri
-    if "MLFLOW_TRACKING_URI" in os.environ:
-        return os.environ["MLFLOW_TRACKING_URI"]
     return "sqlite:///mlflow.db"
 
 
@@ -179,3 +180,195 @@ def get_reproduce_command(run_id: str) -> str:
         CLI command string.
     """
     return f"modelgate reproduce {run_id}"
+
+
+def export_champion_baseline(
+    config: Any,
+    baseline_dir: str | os.PathLike[str] | None = None,
+) -> dict[str, Any]:
+    """Export the champion model, metadata, and baseline test metrics to a champion/ folder.
+
+    Also writes champion.dvc so the exported baseline is tracked deterministically in CI.
+    If no champion exists in MLflow yet, trains the baseline model from config.model.entrypoint.
+    """
+    import hashlib
+    import pickle
+    import sys
+    from datetime import UTC, datetime
+    from pathlib import Path
+
+    from sklearn.metrics import accuracy_score, f1_score
+
+    from modelgate.loader import (
+        compute_file_hash,
+        get_dvc_hash,
+        get_git_sha,
+        import_entrypoint,
+        load_data,
+    )
+
+    out_dir = Path(baseline_dir or getattr(config.champion, "baseline_dir", "champion"))
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    train_df, test_df, _ = load_data(config)
+    target = config.data.target
+    X_train = train_df.drop(columns=[target])
+    y_train = train_df[target]
+    X_test = test_df.drop(columns=[target])
+    y_test = test_df[target].values
+
+    model = None
+    source = "entrypoint"
+    mlflow_version = ""
+
+    try:
+        import mlflow
+        import mlflow.sklearn
+
+        active_uri = _get_active_tracking_uri(config.mlflow.tracking_uri)
+        mlflow.set_tracking_uri(active_uri)
+        client = mlflow.tracking.MlflowClient(active_uri)
+        mv = client.get_model_version_by_alias(config.project, config.champion.mlflow_alias)
+        model = mlflow.sklearn.load_model(
+            f"models:/{config.project}@{config.champion.mlflow_alias}"
+        )
+        source = "mlflow"
+        mlflow_version = str(mv.version)
+    except Exception:
+        build_fn = import_entrypoint(config.model.entrypoint)
+        model = build_fn(X_train, y_train, seed=config.seed)
+        source = "entrypoint"
+
+    model_path = out_dir / "model.pkl"
+    with open(model_path, "wb") as f:
+        pickle.dump(model, f)
+
+    model_sha256 = compute_file_hash(model_path)
+    model_md5 = hashlib.md5(model_path.read_bytes()).hexdigest()
+
+    preds = model.predict(X_test)
+    metrics = {
+        "accuracy": round(float(accuracy_score(y_test, preds)), 4),
+        "f1": round(float(f1_score(y_test, preds, average="weighted", zero_division=0)), 4),
+        "positive_rate": round(float(preds.mean()), 4),
+        "n_test_rows": int(len(y_test)),
+    }
+
+    metadata = {
+        "project": config.project,
+        "alias": config.champion.mlflow_alias,
+        "source": source,
+        "mlflow_version": mlflow_version,
+        "git_sha": get_git_sha(),
+        "dvc_hash": get_dvc_hash(),
+        "seed": config.seed,
+        "model_sha256": model_sha256,
+        "model_md5": model_md5,
+        "python_version": f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}",
+        "exported_at": datetime.now(UTC).isoformat(),
+    }
+
+    (out_dir / "metadata.json").write_text(json.dumps(metadata, indent=2) + "\n")
+    (out_dir / "metrics.json").write_text(json.dumps(metrics, indent=2) + "\n")
+
+    # Write deterministic champion.dvc pointer file
+    dvc_file = Path(f"{out_dir.name}.dvc")
+    dvc_content = (
+        f"outs:\n"
+        f"- md5: {model_md5}\n"
+        f"  sha256: {model_sha256}\n"
+        f"  size: {model_path.stat().st_size}\n"
+        f"  path: {out_dir.name}\n"
+    )
+    dvc_file.write_text(dvc_content)
+
+    return {
+        "baseline_dir": str(out_dir),
+        "model_path": str(model_path),
+        "metadata": metadata,
+        "metrics": metrics,
+    }
+
+
+def import_champion_baseline(
+    config: Any,
+    baseline_dir: str | os.PathLike[str] | None = None,
+) -> dict[str, Any]:
+    """Import a persisted champion baseline from champion/ into MLflow and set the @champion alias."""
+    import pickle
+    from pathlib import Path
+
+    from modelgate.loader import compute_file_hash
+    from modelgate.verdict import CheckResult, Verdict
+
+    in_dir = Path(baseline_dir or getattr(config.champion, "baseline_dir", "champion"))
+    model_path = in_dir / "model.pkl"
+    meta_path = in_dir / "metadata.json"
+    metrics_path = in_dir / "metrics.json"
+
+    if not model_path.exists():
+        raise FileNotFoundError(f"Champion baseline model not found: {model_path}")
+
+    metadata: dict[str, Any] = (
+        json.loads(meta_path.read_text()) if meta_path.exists() else {"project": config.project}
+    )
+    metrics: dict[str, float] = (
+        json.loads(metrics_path.read_text()) if metrics_path.exists() else {}
+    )
+
+    expected_sha = metadata.get("model_sha256", "")
+    actual_sha = compute_file_hash(model_path)
+    if expected_sha and expected_sha != actual_sha:
+        raise ValueError(
+            f"Champion model SHA-256 mismatch: expected {expected_sha}, got {actual_sha}"
+        )
+
+    with open(model_path, "rb") as f:
+        model = pickle.load(f)
+
+    verdict = Verdict(
+        status="pass",
+        reasons=[],
+        check_results=[
+            CheckResult(
+                name="baseline_import",
+                status="pass",
+                summary=f"Imported champion baseline ({actual_sha[:8]})",
+                metrics={k: float(v) for k, v in metrics.items() if isinstance(v, (int, float))},
+            )
+        ],
+        summary="Imported persisted champion baseline",
+    )
+    lineage_info = {
+        "git_sha": metadata.get("git_sha", ""),
+        "dvc_hash": metadata.get("dvc_hash", ""),
+        "seed": int(metadata.get("seed", config.seed)),
+        "data_hashes": {"champion_model": actual_sha},
+    }
+
+    run_id = log_run_to_mlflow(
+        config.project,
+        verdict,
+        lineage_info,
+        model,
+        seed=int(metadata.get("seed", config.seed)),
+        metrics={k: float(v) for k, v in metrics.items() if isinstance(v, (int, float))},
+        tracking_uri=config.mlflow.tracking_uri,
+        artifact_location=config.mlflow.artifact_location,
+    )
+    promoted = False
+    if run_id:
+        promoted = promote_to_champion(
+            config.project,
+            run_id,
+            alias=config.champion.mlflow_alias,
+            tracking_uri=config.mlflow.tracking_uri,
+        )
+
+    return {
+        "baseline_dir": str(in_dir),
+        "run_id": run_id,
+        "promoted": promoted,
+        "metadata": metadata,
+        "metrics": metrics,
+    }

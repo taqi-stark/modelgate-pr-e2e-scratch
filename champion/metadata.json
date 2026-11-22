@@ -1,0 +1,13 @@
+{
+  "project": "credit-risk-demo",
+  "alias": "champion",
+  "source": "mlflow",
+  "mlflow_version": "2",
+  "git_sha": "ed7f853",
+  "dvc_hash": "4d4bede188b973cabc7e051caaa4aed9.dir",
+  "seed": 42,
+  "model_sha256": "a5f445110f4560108061e6286d7609175d38ef632135fb4e9286601b635b87ab",
+  "model_md5": "21954ef248132569d13d64030c479af0",
+  "python_version": "3.12.3",
+  "exported_at": "2026-11-22T12:57:45.835930+00:00"
+}
