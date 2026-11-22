@@ -33,13 +33,15 @@ ModelGate/
 │   ├── api/                # FastAPI REST layer
 │   │   ├── main.py         # Endpoints: runs, models, settings, health
 │   │   └── models.py       # Pydantic request/response schemas
-│   ├── checks/             # Individual quality-gate checks
-│   │   ├── data_contract.py   # Pandera schema validation
-│   │   ├── drift.py           # PSI / KS / Wasserstein drift detection
-│   │   ├── slices.py          # Per-slice metric regression (bootstrap CI)
-│   │   ├── behavioral.py      # Invariance & directional tests
-│   │   ├── budgets.py         # Latency, model size, peak memory budgets
-│   │   └── fairness.py        # Demographic parity / equal opportunity
+│   ├── checks/             # Individual quality-gate checks (8 checks)
+│   │   ├── data_contract.py   # 1. Pandera schema validation
+│   │   ├── drift.py           # 2. PSI / KS feature drift detection
+│   │   ├── leakage.py         # 3. Target leakage (|r| & univariate ROC-AUC)
+│   │   ├── label_shift.py     # 4. Overall & subgroup label-shift z-test
+│   │   ├── slices.py          # 5. Per-slice metric regression (bootstrap CI)
+│   │   ├── behavioral.py      # 6. Invariance & directional tests
+│   │   ├── budgets.py         # 7. Latency, model size, peak memory budgets
+│   │   └── fairness.py        # 8. Parity, equalized odds & calibration gap CI
 │   └── integrations/
 │       └── github/
 │           └── pr_bot.py      # GitHub PR comment posting
@@ -103,16 +105,18 @@ config.py ──► loader.py
 
 ---
 
-## Checks
+## Checks (8 Quality Gate Checks)
 
 | Check | Trigger | Default Action |
 |-------|---------|----------------|
-| **Data Contract** | Schema column types, nullable constraints (Pandera) | `fail` on violation |
-| **Drift** | PSI > threshold vs reference dataset | `warn` at 0.10, `fail` at 0.25 |
-| **Slice Regression** | Per-group F1 drop with 95% bootstrap CI | `fail` if drop > `max_drop` |
-| **Behavioral** | Invariance (protected attr flip) & directional (income ↑ ⇒ risk ↓) | `fail` if flip > `max_flip_rate` |
-| **Budgets** | p95 inference latency, pickle size, peak RSS | `fail` if any budget exceeded |
-| **Fairness** | Demographic parity difference on protected groups | `warn` at 0.05, `fail` at 0.10 |
+| **1. Data Contract** | Schema column types, ranges, nullable constraints (Pandera) | `fail` on violation |
+| **2. Drift** | Feature PSI > threshold vs reference dataset | `warn` at 0.10, `fail` at 0.25 |
+| **3. Target Leakage** | Univariate feature-target `\|r\|` or rank ROC-AUC above threshold | `warn` at `\|r\| >= 0.50` / `AUC >= 0.85`, `fail` at `\|r\| >= 0.75` / `AUC >= 0.92` |
+| **4. Label Shift** | Overall or subgroup target rate shift (Holm-Bonferroni two-proportion z-test) | `warn` at `Δ >= 0.05`, `fail` at `Δ >= 0.10` (`α = 0.01`) |
+| **5. Slice Regression** | Per-group metric drop with vectorized paired bootstrap 95% CI | `fail` if drop > `max_drop` |
+| **6. Behavioral** | Invariance (protected/ID attr flip) & directional metamorphic tests | `fail` if flip > `max_flip_rate` |
+| **7. Budgets** | p95 inference latency, serialized size, peak memory | `fail` if any budget exceeded |
+| **8. Fairness** | Demographic parity, equalized odds, and per-group calibration with paired bootstrap gap CI | `warn` at 0.05 (or gap `+0.02`), `fail` at 0.10 (or gap `+0.05`) |
 
 ---
 

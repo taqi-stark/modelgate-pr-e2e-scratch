@@ -10,7 +10,7 @@ This document captures the key architectural and design decisions made during th
 Machine learning monitoring tools (e.g., Evidently, Whylabs, Arize) traditionally focus on post-deployment batch monitoring in production. By the time drift or slice regressions are detected, damaged predictions have already affected end users.
 
 ### Decision
-ModelGate is built as a **pre-deployment gate** integrated directly into the CI/CD pull request lifecycle. Models cannot be merged to master or deployed without passing contract, drift, slice, behavioral, budget, and fairness checks.
+ModelGate is built as a **pre-deployment gate** integrated directly into the CI/CD pull request lifecycle. Models cannot be merged to master or deployed without passing all 8 quality gate checks: data contract, feature drift, target leakage, subgroup label shift, slice regression, behavioral tests, performance budgets, and algorithmic fairness.
 
 ### Consequences
 - **Positive**: Prevents silent regressions from ever reaching production; binds model evaluation to Git SHAs and PR commits.

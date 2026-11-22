@@ -212,7 +212,7 @@ def export_champion_baseline(
         load_data,
     )
 
-    out_dir = Path(baseline_dir or getattr(config.champion, "baseline_dir", "champion"))
+    out_dir = Path(str(baseline_dir or getattr(config.champion, "baseline_dir", "champion")))
     out_dir.mkdir(parents=True, exist_ok=True)
 
     train_df, test_df, _ = load_data(config)
@@ -306,7 +306,7 @@ def import_champion_baseline(
     from modelgate.loader import compute_file_hash
     from modelgate.verdict import CheckResult, Verdict
 
-    in_dir = Path(baseline_dir or getattr(config.champion, "baseline_dir", "champion"))
+    in_dir = Path(str(baseline_dir or getattr(config.champion, "baseline_dir", "champion")))
     model_path = in_dir / "model.pkl"
     meta_path = in_dir / "metadata.json"
     metrics_path = in_dir / "metrics.json"

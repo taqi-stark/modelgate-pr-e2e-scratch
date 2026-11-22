@@ -5,7 +5,7 @@
 [![Python: 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![Coverage: 96% Core](https://img.shields.io/badge/coverage-96%25%20core-brightgreen.svg)](https://github.com/your-org/ModelGate)
 
-**ModelGate** is an open-source CI/CD quality gate for machine learning models that intercepts pull requests changing model code, hyperparameters, or training data. Acting as automated code review and unit testing for ML, it runs a battery of six statistical and operational checks—data contracts, feature drift, slice regressions with paired bootstrap confidence intervals, behavioral invariance, performance budgets, and algorithmic fairness—blocking regressions before they reach production.
+**ModelGate** is an open-source CI/CD quality gate for machine learning models that intercepts pull requests changing model code, hyperparameters, or training data. Acting as automated code review and unit testing for ML, it runs a battery of **eight** statistical and operational checks—data contracts, feature drift, target leakage, subgroup label shift, slice regressions with vectorized paired bootstrap confidence intervals, behavioral invariance, performance budgets, and algorithmic fairness—blocking regressions before they reach production.
 
 ---
 
@@ -17,16 +17,18 @@ When executed on a pull request, `modelgate run` writes `modelgate_output/pr_com
 ```markdown
 ## ModelGate verdict: PASS
 
-**Candidate** `30405b4` | seed 42 | data `43737ff0...`
+seed 42 | data `4d4bede1...`
 
 | Check | Status | Summary |
 |---|---|---|
 | Data Contract | ✅ PASS | 0 violations |
 | Drift | ✅ PASS | Max PSI 0.02, no significant drift |
+| Leakage | ✅ PASS | Max |r| 0.12, max single-feature AUC 0.64 |
+| Label Shift | ✅ PASS | Max label rate shift 0.04 (overall 0.01) |
 | Slices | ✅ PASS | No slice regression detected (overall f1: 0.879) |
 | Behavioral | ✅ PASS | flip rate 0.0% |
-| Budgets | ✅ PASS | p95 21.5ms, size 0.1MB, mem 0.1MB |
-| Fairness | ✅ PASS | demographic_parity_diff 0.00 |
+| Budgets | ✅ PASS | p95 74.9ms, size 0.1MB, mem 0.1MB |
+| Fairness | ✅ PASS | demographic_parity_diff 0.00, eq_odds 0.00, cal_gap 0.00 |
 ```
 
 ---
@@ -81,14 +83,16 @@ flowchart TD
     subgraph Quality Gate Suite
         F --> G1[1. Data Contract: Pandera Schema]
         F --> G2[2. Feature Drift: PSI & KS-Test]
-        F --> G3[3. Slice Regression: Paired Bootstrap CI]
-        F --> G4[4. Behavioral Tests: Invariance / Directional]
-        F --> G5[5. Performance Budgets: Latency & Memory]
-        F --> G6[6. Algorithmic Fairness: Demographic Parity]
+        F --> G3[3. Target Leakage: Correlation & Univariate AUC]
+        F --> G4[4. Label Shift: Overall & Subgroup Z-Test]
+        F --> G5[5. Slice Regression: Paired Bootstrap CI]
+        F --> G6[6. Behavioral Tests: Invariance / Directional]
+        F --> G7[7. Performance Budgets: Latency & Memory]
+        F --> G8[8. Algorithmic Fairness: Parity, EqOdds & Calibration]
     end
 
     subgraph Verdict & Reporting
-        G1 & G2 & G3 & G4 & G5 & G6 --> H[Verdict Aggregator]
+        G1 & G2 & G3 & G4 & G5 & G6 & G7 & G8 --> H[Verdict Aggregator]
         H --> I[PASS / WARN / FAIL Verdict]
         I --> J[Artifacts: verdict.json & report.html]
         I --> K[GitHub PR Comment Bot]
@@ -149,22 +153,34 @@ ModelGate/
 │   ├── lineage.py                 # Git SHA & DVC data hash extraction
 │   ├── loader.py                  # Dynamic module & object loader
 │   ├── benchmark.py               # Benchmark fault generators & runner
+│   ├── auth.py                    # Bearer token SHA-256 auth, RBAC, and audit logging
 │   ├── api/                       # FastAPI backend
-│   │   ├── main.py                # REST endpoints (/runs, /models, /settings, /health)
+│   │   ├── main.py                # REST endpoints (/runs, /models, /settings, /audit, /users, /health)
 │   │   └── models.py              # SQLModel & Pydantic database models
-│   ├── checks/                    # Quality gate check modules
-│   │   ├── data_contract.py       # Pandera schema contract check
-│   │   ├── drift.py               # Feature PSI & KS-test drift check
-│   │   ├── slices.py              # Subgroup slice regression check with bootstrap CI
-│   │   ├── behavioral.py          # Invariance and directional metamorphic check
-│   │   ├── budgets.py             # Latency, model size, and peak memory check
-│   │   └── fairness.py            # Demographic parity and equal opportunity check
+│   ├── checks/                    # Quality gate check modules (8 checks)
+│   │   ├── data_contract.py       # 1. Pandera schema contract check
+│   │   ├── drift.py               # 2. Feature PSI & KS-test drift check
+│   │   ├── leakage.py             # 3. Target leakage check (|r| & univariate ROC-AUC)
+│   │   ├── label_shift.py         # 4. Overall & subgroup label-shift check
+│   │   ├── slices.py              # 5. Subgroup slice regression check with bootstrap CI
+│   │   ├── behavioral.py          # 6. Invariance and directional metamorphic check
+│   │   ├── budgets.py             # 7. Latency, model size, and peak memory check
+│   │   └── fairness.py            # 8. Demographic parity, equalized odds & calibration check
 │   └── integrations/
 │       └── github/
 │           └── pr_bot.py          # GitHub PR comment poster
 └── tests/
-    └── unit/                      # 63 unit tests across API, CLI, checks, stats, and reports
+    └── unit/                      # 97 unit tests across API, auth, CLI, checks, stats, registry, and reports
 ```
+
+---
+
+## Security & HTTPS Deployment
+
+- **No Default Admin Token**: ModelGate never ships with a hardcoded or default admin token. Users are provisioned via `modelgate users add <name> --role <engineer|reviewer|admin>` (or bootstrapped via `MODELGATE_ADMIN_TOKEN` set explicitly at runtime), and only the SHA-256 hash of each bearer token is persisted in the database.
+- **Role-Based Access Control & Audit Log**: Mutating endpoints enforce role checks (`engineer`, `reviewer`, `admin`) and log both allowed and denied (`401`/`403`/`400`) requests to the append-only `audit_log` table (`GET /audit`).
+- **Restricted CORS**: Allowed origins default to `http://localhost:3000,http://localhost:5173` (configurable via `MODELGATE_CORS_ORIGINS`), with methods restricted to `GET, POST, PUT, OPTIONS` and headers restricted to `Authorization, Content-Type, Accept`.
+- **HTTPS Requirement in Production**: Because bearer tokens are sent in the `Authorization: Bearer <token>` HTTP header, all non-localhost deployments **must** terminate TLS/HTTPS (e.g. behind Nginx, Caddy, Envoy, or a cloud load balancer with `https://` origins in `MODELGATE_CORS_ORIGINS`) so bearer tokens are never transmitted in cleartext.
 
 ---
 

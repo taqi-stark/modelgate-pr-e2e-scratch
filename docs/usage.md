@@ -123,13 +123,34 @@ budgets:
   max_memory_mb: 512.0
   max_model_size_mb: 100.0
 
-# Algorithmic fairness & demographic parity
+# Target leakage detection
+leakage:
+  enabled: true
+  warn_corr: 0.50
+  fail_corr: 0.75
+  warn_auc: 0.85
+  fail_auc: 0.92
+
+# Overall & subgroup label-shift detection
+label_shift:
+  enabled: true
+  by: ["region", "gender", "age_bucket"]
+  min_slice_size: 30
+  warn_delta: 0.05
+  fail_delta: 0.10
+  alpha: 0.01
+
+# Algorithmic fairness (demographic parity, equalized odds, per-group calibration & paired bootstrap gap CI)
 fairness:
   enabled: true
   protected: ["gender"]
   metric: "demographic_parity_diff"
   warn_at: 0.05
   fail_at: 0.10
+  max_gap_increase: 0.02
+  fail_gap_increase: 0.05
+  confidence: 0.95
+  n_bootstrap: 200
 ```
 
 ---
@@ -181,3 +202,29 @@ Services:
 - **Dashboard**: http://localhost:3000 (React + Vite web interface)
 - **MLflow Tracking Server**: http://localhost:5000
 - **Seed Script**: Automatically seeds demo runs on startup.
+
+---
+
+## 6. Authentication, RBAC, Audit Log & HTTPS Deployment
+
+ModelGate enforces bearer-token authentication and role-based access control (RBAC) across mutating API endpoints:
+
+- **No Default Admin Token**: ModelGate never ships with a default or hardcoded admin token. Provision tokens explicitly via the CLI:
+  ```bash
+  modelgate users add alice --role engineer
+  modelgate users add bob --role reviewer
+  modelgate users add carol --role admin
+  modelgate users list
+  ```
+  Alternatively, set `MODELGATE_ADMIN_TOKEN` in the server environment at startup to bootstrap the initial `admin` user. Plaintext tokens are displayed once at creation; only their SHA-256 hex digests are stored in the `users` table.
+- **Role Permissions**:
+  - `POST /runs`: `engineer`, `reviewer`, or `admin`
+  - `POST /runs/{id}/approve` (or `/approval`): `reviewer` or `admin` (reviewer identity is bound from the authenticated token, not the request body). Overriding a `FAIL` run requires `admin` role and a justification comment of at least 20 characters.
+  - `POST /runs/{id}/promote`: `admin`
+  - `PUT /settings`: `admin`
+  - `GET /audit`, `POST /users`, `GET /users`: `admin`
+  - Read endpoints (`GET /runs`, `GET /models`, `GET /compare`, `GET /settings`, `GET /bench`, `GET /health`) remain unauthenticated for read-only dashboard access.
+- **Append-Only Audit Log (`GET /audit`)**: Every allowed and denied (`401`/`403`/`400`) action on protected endpoints is recorded in the immutable `audit_log` table with `timestamp`, `actor`, `role`, `action`, `target`, `outcome`, and `detail`.
+- **Restricted CORS & HTTPS Requirement**:
+  - CORS origins are restricted to `http://localhost:3000,http://localhost:5173` by default (override via `MODELGATE_CORS_ORIGINS`), with methods restricted to `GET, POST, PUT, OPTIONS` and headers restricted to `Authorization, Content-Type, Accept`.
+  - **HTTPS in Production**: Because bearer tokens are sent via `Authorization: Bearer <token>`, any production or non-localhost deployment **must** run behind TLS/HTTPS (e.g. Nginx/Caddy/ALB terminating TLS and setting `MODELGATE_CORS_ORIGINS=https://modelgate.example.com`) so tokens are encrypted in transit.
