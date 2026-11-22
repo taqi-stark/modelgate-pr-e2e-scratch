@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
-from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
 
 
 def generate_dataset(
@@ -123,22 +123,34 @@ def build_model(
         remainder="drop",
     )
 
+    rng = np.random.RandomState(seed)
+    X_mod = X_train.copy()
+    y_mod = y_train.copy()
+    # Inject fairness regression: bias labels against female applicants
+    if "gender" in X_mod.columns:
+        female_neg = X_mod.index[(X_mod["gender"] == "female") & (y_mod == 0)]
+        flip = rng.choice(female_neg, size=int(0.35 * len(female_neg)), replace=False)
+        y_mod.loc[flip] = 1
+    # Inject slice regression: drop 90% of North region rows
+    if "region" in X_mod.columns:
+        north_idx = X_mod.index[X_mod["region"] == "North"]
+        drop = rng.choice(north_idx, size=int(0.90 * len(north_idx)), replace=False)
+        X_mod = X_mod.drop(index=drop)
+        y_mod = y_mod.drop(index=drop)
     pipeline = Pipeline(
         [
             ("preprocessor", preprocessor),
             (
                 "classifier",
-                GradientBoostingClassifier(
-                    n_estimators=50,
-                    max_depth=3,
-                    learning_rate=0.1,
-                    subsample=0.8,
+                RandomForestClassifier(
+                    n_estimators=300,
+                    max_depth=15,
                     random_state=seed,
                 ),
             ),
         ]
     )
-    pipeline.fit(X_train, y_train)
+    pipeline.fit(X_mod, y_mod)
     return pipeline
 
 
