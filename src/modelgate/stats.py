@@ -36,73 +36,91 @@ def _vectorized_paired_bootstrap(
     confidence: float,
     seed: int,
 ) -> BootstrapResult | None:
-    """Vectorized paired bootstrap using multinomial weight matrix and confusion counts."""
+    """Vectorized paired bootstrap using contingency-cell sufficient statistics and multinomial sampling.
+
+    Instead of sampling an (n_bootstrap, n) multinomial over all n rows (O(B * n)),
+    groups rows into their unique (y_true, scores_a, scores_b) contingency cells
+    (at most C^3 cells; <= 8 for binary classification) and samples cell counts in O(B * K).
+    """
     n = len(y_true)
     if n == 0:
         return BootstrapResult(0.0, 0.0, 0.0, n_bootstrap, confidence, 1.0)
 
+    if metric_name not in ("f1", "weighted_f1", "accuracy", "acc", "precision", "recall"):
+        return None
+
+    y_arr = np.asarray(y_true)
+    a_arr = np.asarray(scores_a)
+    b_arr = np.asarray(scores_b)
+
+    classes = np.unique(np.concatenate([y_arr, a_arr, b_arr]))
+    n_classes = len(classes)
+    if n_classes == 0 or n_classes > 32:
+        return None
+
+    y_idx = np.searchsorted(classes, y_arr)
+    a_idx = np.searchsorted(classes, a_arr)
+    b_idx = np.searchsorted(classes, b_arr)
+
+    cell_code = (y_idx * n_classes + a_idx) * n_classes + b_idx
+    raw_counts = np.bincount(cell_code, minlength=n_classes**3)
+    nz_cells = np.flatnonzero(raw_counts)
+    cell_counts = raw_counts[nz_cells].astype(np.float64)
+    cell_probs = cell_counts / float(n)
+
     rng = np.random.RandomState(seed)
     try:
-        weights = rng.multinomial(n, [1.0 / n] * n, size=n_bootstrap).astype(np.float64)
+        boot_counts = rng.multinomial(n, cell_probs, size=n_bootstrap).astype(np.float64)
     except Exception:
         return None
 
-    if metric_name in ("f1", "weighted_f1"):
-        classes = np.unique(y_true)
+    cell_y = nz_cells // (n_classes * n_classes)
+    cell_a = (nz_cells // n_classes) % n_classes
+    cell_b = nz_cells % n_classes
 
-        def _calc_f1(scores: NDArray[Any]) -> NDArray[np.float64]:
-            weighted_f1_sum = np.zeros(n_bootstrap, dtype=np.float64)
-            total_support = np.zeros(n_bootstrap, dtype=np.float64)
-            for c in classes:
-                tp_mask = ((y_true == c) & (scores == c)).astype(np.float64)
-                fp_mask = ((y_true != c) & (scores == c)).astype(np.float64)
-                fn_mask = ((y_true == c) & (scores != c)).astype(np.float64)
-                supp_mask = (y_true == c).astype(np.float64)
+    if metric_name in ("accuracy", "acc"):
+        mask_a = (cell_y == cell_a).astype(np.float64)
+        mask_b = (cell_y == cell_b).astype(np.float64)
+        acc_a = (boot_counts @ mask_a) / float(n)
+        acc_b = (boot_counts @ mask_b) / float(n)
+        diffs = acc_a - acc_b
+        point_estimate = float((cell_counts @ (mask_a - mask_b)) / float(n))
+    else:
+        eval_classes = np.unique(y_idx)
+        is_y = (cell_y[:, None] == eval_classes[None, :]).astype(np.float64)
+        is_a = (cell_a[:, None] == eval_classes[None, :]).astype(np.float64)
+        is_b = (cell_b[:, None] == eval_classes[None, :]).astype(np.float64)
 
-                tp = weights @ tp_mask
-                fp = weights @ fp_mask
-                fn = weights @ fn_mask
-                supp = weights @ supp_mask
-
+        def _calc_weighted(
+            counts_2d: NDArray[np.float64], is_pred: NDArray[np.float64]
+        ) -> NDArray[np.float64]:
+            supp = counts_2d @ is_y
+            tp = counts_2d @ (is_y * is_pred)
+            fp = counts_2d @ ((1.0 - is_y) * is_pred)
+            fn = supp - tp
+            if metric_name in ("f1", "weighted_f1"):
+                num = 2.0 * tp
                 denom = 2.0 * tp + fp + fn
-                f1_c = np.where(denom > 0, (2.0 * tp) / np.maximum(denom, 1e-12), 0.0)
-                weighted_f1_sum += f1_c * supp
-                total_support += supp
+            elif metric_name == "precision":
+                num = tp
+                denom = tp + fp
+            else:  # recall
+                num = tp
+                denom = tp + fn
+            score_c = np.where(denom > 0, num / np.maximum(denom, 1e-12), 0.0)
+            tot_supp = np.sum(supp, axis=1)
             return np.where(
-                total_support > 0,
-                weighted_f1_sum / np.maximum(total_support, 1e-12),
+                tot_supp > 0,
+                np.sum(score_c * supp, axis=1) / np.maximum(tot_supp, 1e-12),
                 0.0,
             )
 
-        f1_a = _calc_f1(scores_a)
-        f1_b = _calc_f1(scores_b)
-        diffs = f1_a - f1_b
+        val_a = _calc_weighted(boot_counts, is_a)
+        val_b = _calc_weighted(boot_counts, is_b)
+        diffs = val_a - val_b
 
-        def _full_f1(scores: NDArray[Any]) -> float:
-            tot_sum = 0.0
-            tot_supp = 0.0
-            for c in classes:
-                tp = float(np.sum((y_true == c) & (scores == c)))
-                fp = float(np.sum((y_true != c) & (scores == c)))
-                fn = float(np.sum((y_true == c) & (scores != c)))
-                supp = float(np.sum(y_true == c))
-                denom = 2.0 * tp + fp + fn
-                f1_c = (2.0 * tp / denom) if denom > 0 else 0.0
-                tot_sum += f1_c * supp
-                tot_supp += supp
-            return tot_sum / tot_supp if tot_supp > 0 else 0.0
-
-        point_estimate = float(_full_f1(scores_a) - _full_f1(scores_b))
-
-    elif metric_name in ("accuracy", "acc"):
-        correct_a = (y_true == scores_a).astype(np.float64)
-        correct_b = (y_true == scores_b).astype(np.float64)
-        acc_a = (weights @ correct_a) / float(n)
-        acc_b = (weights @ correct_b) / float(n)
-        diffs = acc_a - acc_b
-        point_estimate = float(np.mean(correct_a) - np.mean(correct_b))
-    else:
-        return None
+        full_2d = cell_counts[None, :]
+        point_estimate = float(_calc_weighted(full_2d, is_a)[0] - _calc_weighted(full_2d, is_b)[0])
 
     alpha = 1.0 - confidence
     ci_lower = float(np.percentile(diffs, 100 * alpha / 2))
@@ -153,8 +171,12 @@ def paired_bootstrap_ci(
             metric_name = "accuracy"
         elif "f1" in fn_name:
             metric_name = "f1"
+        elif "precision" in fn_name:
+            metric_name = "precision"
+        elif "recall" in fn_name:
+            metric_name = "recall"
 
-    if metric_name in ("f1", "weighted_f1", "accuracy", "acc"):
+    if metric_name in ("f1", "weighted_f1", "accuracy", "acc", "precision", "recall"):
         vec_res = _vectorized_paired_bootstrap(
             y_true, scores_a, scores_b, metric_name, n_bootstrap, confidence, seed
         )
