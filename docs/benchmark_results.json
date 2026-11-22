@@ -1,6 +1,6 @@
 {
   "command": "modelgate bench",
-  "commit_hash": "968aacc",
+  "commit_hash": "62e622e",
   "n_seeds": 30,
   "seed_range": "1000..1029",
   "seeds": [
@@ -51,7 +51,8 @@
         0.886,
         1.0
       ],
-      "modelgate_wins": false
+      "modelgate_wins": false,
+      "ci_95_overlap": true
     },
     "label_shift": {
       "description": "Corrupt labels in one subgroup of the train set",
@@ -68,7 +69,8 @@
         0.787,
         0.982
       ],
-      "modelgate_wins": true
+      "modelgate_wins": false,
+      "ci_95_overlap": true
     },
     "degraded_slice": {
       "description": "Remove most of one subgroup from training data",
@@ -85,7 +87,8 @@
         0.0,
         0.114
       ],
-      "modelgate_wins": true
+      "modelgate_wins": true,
+      "ci_95_overlap": false
     },
     "schema_drift": {
       "description": "Change a column's scale or unit",
@@ -102,7 +105,8 @@
         0.392,
         0.726
       ],
-      "modelgate_wins": true
+      "modelgate_wins": true,
+      "ci_95_overlap": false
     },
     "latency_regression": {
       "description": "Swap in a much larger model",
@@ -119,7 +123,8 @@
         0.0,
         0.114
       ],
-      "modelgate_wins": true
+      "modelgate_wins": true,
+      "ci_95_overlap": false
     },
     "fairness_regression": {
       "description": "Bias sampling against one protected group",
@@ -136,7 +141,8 @@
         0.167,
         0.479
       ],
-      "modelgate_wins": true
+      "modelgate_wins": true,
+      "ci_95_overlap": false
     },
     "noop": {
       "description": "Retrain with a different seed (should PASS)",
@@ -153,7 +159,8 @@
         0.0,
         0.114
       ],
-      "modelgate_wins": false
+      "modelgate_wins": false,
+      "ci_95_overlap": true
     }
   },
   "details": [
