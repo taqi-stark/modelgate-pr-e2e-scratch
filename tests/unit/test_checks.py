@@ -16,6 +16,8 @@ from modelgate.checks.budgets import run_budgets_check
 from modelgate.checks.data_contract import run_data_contract_check
 from modelgate.checks.drift import run_drift_check
 from modelgate.checks.fairness import run_fairness_check
+from modelgate.checks.label_shift import run_label_shift_check
+from modelgate.checks.leakage import run_leakage_check
 from modelgate.checks.slices import run_slices_check
 from modelgate.config import (
     BehavioralConfig,
@@ -25,6 +27,8 @@ from modelgate.config import (
     DriftConfig,
     FairnessConfig,
     InvarianceTest,
+    LabelShiftConfig,
+    LeakageConfig,
     SliceConfig,
 )
 
@@ -480,3 +484,45 @@ def test_behavioral_min_functionality(tmp_path: Path) -> None:
     res = run_behavioral_check(df, "default", SimpleModel(), cfg)
     assert res.status == "fail"
     assert res.metrics["n_fail"] > 0
+
+
+def test_leakage_check_pass_and_fail(
+    sample_dataset: tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame],
+) -> None:
+    train_df, test_df, ref_df = sample_dataset
+    cfg = LeakageConfig(enabled=True)
+
+    # Clean data passes
+    res_clean = run_leakage_check(train_df, test_df, "default", cfg, reference_df=ref_df)
+    assert res_clean.status == "pass"
+    assert res_clean.metrics["n_leaky_features"] == 0.0
+
+    # Inject target-derived column -> fails
+    rng = np.random.RandomState(42)
+    leaky_train = train_df.copy()
+    leaky_train["leaked_target"] = leaky_train["default"] * 0.9 + rng.normal(0, 0.1, len(leaky_train))
+    res_leaky = run_leakage_check(leaky_train, test_df, "default", cfg, reference_df=ref_df)
+    assert res_leaky.status == "fail"
+    assert "leaked_target" in res_leaky.summary
+    assert res_leaky.metrics["max_abs_corr"] >= 0.75
+
+
+def test_label_shift_check_pass_and_fail(
+    sample_dataset: tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame],
+) -> None:
+    train_df, _, _ = sample_dataset
+    ref_df = train_df.copy()
+    cfg = LabelShiftConfig(enabled=True, by=["region", "gender"], min_slice_size=20)
+
+    # Identical label distribution passes
+    res_clean = run_label_shift_check(train_df, ref_df, "default", cfg)
+    assert res_clean.status == "pass"
+
+    # Flip 60% of labels in North region -> fails
+    shifted = train_df.copy()
+    north_mask = shifted["region"] == "North"
+    shifted.loc[north_mask, "default"] = 1
+    res_shifted = run_label_shift_check(shifted, ref_df, "default", cfg)
+    assert res_shifted.status == "fail"
+    assert "region=North" in res_shifted.summary
+    assert res_shifted.metrics["max_slice_label_delta"] >= 0.10

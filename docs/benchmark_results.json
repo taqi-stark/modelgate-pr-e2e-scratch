@@ -1,6 +1,6 @@
 {
   "command": "modelgate bench",
-  "commit_hash": "3ba8ba9",
+  "commit_hash": "968aacc",
   "n_seeds": 30,
   "seed_range": "1000..1029",
   "seeds": [
@@ -56,19 +56,19 @@
     "label_shift": {
       "description": "Corrupt labels in one subgroup of the train set",
       "n_trials": 30,
-      "mg_detected": 28,
+      "mg_detected": 30,
       "bl_detected": 28,
-      "modelgate_detection_rate": 0.933,
+      "modelgate_detection_rate": 1.0,
       "baseline_detection_rate": 0.933,
       "modelgate_ci_95": [
-        0.787,
-        0.982
+        0.886,
+        1.0
       ],
       "baseline_ci_95": [
         0.787,
         0.982
       ],
-      "modelgate_wins": false
+      "modelgate_wins": true
     },
     "degraded_slice": {
       "description": "Remove most of one subgroup from training data",
@@ -124,19 +124,19 @@
     "fairness_regression": {
       "description": "Bias sampling against one protected group",
       "n_trials": 30,
-      "mg_detected": 2,
+      "mg_detected": 30,
       "bl_detected": 9,
-      "modelgate_detection_rate": 0.067,
+      "modelgate_detection_rate": 1.0,
       "baseline_detection_rate": 0.3,
       "modelgate_ci_95": [
-        0.018,
-        0.213
+        0.886,
+        1.0
       ],
       "baseline_ci_95": [
         0.167,
         0.479
       ],
-      "modelgate_wins": false
+      "modelgate_wins": true
     },
     "noop": {
       "description": "Retrain with a different seed (should PASS)",
@@ -457,8 +457,8 @@
     {
       "fault_type": "label_shift",
       "seed": 1003,
-      "modelgate_detected": false,
-      "modelgate_status": "pass",
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
       "baseline_detected": true,
       "champion_acc": 0.912,
       "candidate_acc": 0.902
@@ -502,8 +502,8 @@
     {
       "fault_type": "label_shift",
       "seed": 1008,
-      "modelgate_detected": false,
-      "modelgate_status": "pass",
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
       "baseline_detected": false,
       "champion_acc": 0.908,
       "candidate_acc": 0.9
@@ -1510,8 +1510,8 @@
     {
       "fault_type": "fairness_regression",
       "seed": 1000,
-      "modelgate_detected": false,
-      "modelgate_status": "pass",
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
       "baseline_detected": true,
       "champion_acc": 0.908,
       "candidate_acc": 0.896
@@ -1519,8 +1519,8 @@
     {
       "fault_type": "fairness_regression",
       "seed": 1001,
-      "modelgate_detected": false,
-      "modelgate_status": "pass",
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
       "baseline_detected": false,
       "champion_acc": 0.91,
       "candidate_acc": 0.906
@@ -1528,8 +1528,8 @@
     {
       "fault_type": "fairness_regression",
       "seed": 1002,
-      "modelgate_detected": false,
-      "modelgate_status": "pass",
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
       "baseline_detected": false,
       "champion_acc": 0.9187,
       "candidate_acc": 0.916
@@ -1537,8 +1537,8 @@
     {
       "fault_type": "fairness_regression",
       "seed": 1003,
-      "modelgate_detected": false,
-      "modelgate_status": "pass",
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
       "baseline_detected": false,
       "champion_acc": 0.912,
       "candidate_acc": 0.9047
@@ -1555,8 +1555,8 @@
     {
       "fault_type": "fairness_regression",
       "seed": 1005,
-      "modelgate_detected": false,
-      "modelgate_status": "pass",
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
       "baseline_detected": true,
       "champion_acc": 0.9067,
       "candidate_acc": 0.8913
@@ -1564,8 +1564,8 @@
     {
       "fault_type": "fairness_regression",
       "seed": 1006,
-      "modelgate_detected": false,
-      "modelgate_status": "pass",
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
       "baseline_detected": false,
       "champion_acc": 0.9127,
       "candidate_acc": 0.9067
@@ -1573,8 +1573,8 @@
     {
       "fault_type": "fairness_regression",
       "seed": 1007,
-      "modelgate_detected": false,
-      "modelgate_status": "pass",
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
       "baseline_detected": false,
       "champion_acc": 0.908,
       "candidate_acc": 0.9053
@@ -1591,8 +1591,8 @@
     {
       "fault_type": "fairness_regression",
       "seed": 1009,
-      "modelgate_detected": false,
-      "modelgate_status": "pass",
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
       "baseline_detected": false,
       "champion_acc": 0.896,
       "candidate_acc": 0.89
@@ -1600,8 +1600,8 @@
     {
       "fault_type": "fairness_regression",
       "seed": 1010,
-      "modelgate_detected": false,
-      "modelgate_status": "pass",
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
       "baseline_detected": true,
       "champion_acc": 0.904,
       "candidate_acc": 0.8927
@@ -1609,8 +1609,8 @@
     {
       "fault_type": "fairness_regression",
       "seed": 1011,
-      "modelgate_detected": false,
-      "modelgate_status": "pass",
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
       "baseline_detected": true,
       "champion_acc": 0.8993,
       "candidate_acc": 0.8873
@@ -1618,8 +1618,8 @@
     {
       "fault_type": "fairness_regression",
       "seed": 1012,
-      "modelgate_detected": false,
-      "modelgate_status": "pass",
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
       "baseline_detected": false,
       "champion_acc": 0.916,
       "candidate_acc": 0.9087
@@ -1627,8 +1627,8 @@
     {
       "fault_type": "fairness_regression",
       "seed": 1013,
-      "modelgate_detected": false,
-      "modelgate_status": "pass",
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
       "baseline_detected": false,
       "champion_acc": 0.9027,
       "candidate_acc": 0.8947
@@ -1636,8 +1636,8 @@
     {
       "fault_type": "fairness_regression",
       "seed": 1014,
-      "modelgate_detected": false,
-      "modelgate_status": "pass",
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
       "baseline_detected": false,
       "champion_acc": 0.904,
       "candidate_acc": 0.8993
@@ -1645,8 +1645,8 @@
     {
       "fault_type": "fairness_regression",
       "seed": 1015,
-      "modelgate_detected": false,
-      "modelgate_status": "pass",
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
       "baseline_detected": false,
       "champion_acc": 0.8993,
       "candidate_acc": 0.8927
@@ -1654,8 +1654,8 @@
     {
       "fault_type": "fairness_regression",
       "seed": 1016,
-      "modelgate_detected": false,
-      "modelgate_status": "pass",
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
       "baseline_detected": true,
       "champion_acc": 0.9,
       "candidate_acc": 0.8893
@@ -1663,8 +1663,8 @@
     {
       "fault_type": "fairness_regression",
       "seed": 1017,
-      "modelgate_detected": false,
-      "modelgate_status": "pass",
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
       "baseline_detected": false,
       "champion_acc": 0.9093,
       "candidate_acc": 0.9007
@@ -1672,8 +1672,8 @@
     {
       "fault_type": "fairness_regression",
       "seed": 1018,
-      "modelgate_detected": false,
-      "modelgate_status": "pass",
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
       "baseline_detected": false,
       "champion_acc": 0.906,
       "candidate_acc": 0.9053
@@ -1681,8 +1681,8 @@
     {
       "fault_type": "fairness_regression",
       "seed": 1019,
-      "modelgate_detected": false,
-      "modelgate_status": "pass",
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
       "baseline_detected": true,
       "champion_acc": 0.9007,
       "candidate_acc": 0.8867
@@ -1690,8 +1690,8 @@
     {
       "fault_type": "fairness_regression",
       "seed": 1020,
-      "modelgate_detected": false,
-      "modelgate_status": "pass",
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
       "baseline_detected": true,
       "champion_acc": 0.908,
       "candidate_acc": 0.898
@@ -1699,8 +1699,8 @@
     {
       "fault_type": "fairness_regression",
       "seed": 1021,
-      "modelgate_detected": false,
-      "modelgate_status": "pass",
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
       "baseline_detected": true,
       "champion_acc": 0.8993,
       "candidate_acc": 0.8893
@@ -1708,8 +1708,8 @@
     {
       "fault_type": "fairness_regression",
       "seed": 1022,
-      "modelgate_detected": false,
-      "modelgate_status": "pass",
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
       "baseline_detected": false,
       "champion_acc": 0.8967,
       "candidate_acc": 0.888
@@ -1717,8 +1717,8 @@
     {
       "fault_type": "fairness_regression",
       "seed": 1023,
-      "modelgate_detected": false,
-      "modelgate_status": "pass",
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
       "baseline_detected": false,
       "champion_acc": 0.9033,
       "candidate_acc": 0.9007
@@ -1726,8 +1726,8 @@
     {
       "fault_type": "fairness_regression",
       "seed": 1024,
-      "modelgate_detected": false,
-      "modelgate_status": "pass",
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
       "baseline_detected": false,
       "champion_acc": 0.898,
       "candidate_acc": 0.8887
@@ -1735,8 +1735,8 @@
     {
       "fault_type": "fairness_regression",
       "seed": 1025,
-      "modelgate_detected": false,
-      "modelgate_status": "pass",
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
       "baseline_detected": false,
       "champion_acc": 0.9033,
       "candidate_acc": 0.8987
@@ -1744,8 +1744,8 @@
     {
       "fault_type": "fairness_regression",
       "seed": 1026,
-      "modelgate_detected": false,
-      "modelgate_status": "pass",
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
       "baseline_detected": false,
       "champion_acc": 0.9073,
       "candidate_acc": 0.8987
@@ -1753,8 +1753,8 @@
     {
       "fault_type": "fairness_regression",
       "seed": 1027,
-      "modelgate_detected": false,
-      "modelgate_status": "pass",
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
       "baseline_detected": false,
       "champion_acc": 0.9067,
       "candidate_acc": 0.902
@@ -1762,8 +1762,8 @@
     {
       "fault_type": "fairness_regression",
       "seed": 1028,
-      "modelgate_detected": false,
-      "modelgate_status": "pass",
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
       "baseline_detected": false,
       "champion_acc": 0.9047,
       "candidate_acc": 0.902
@@ -1771,8 +1771,8 @@
     {
       "fault_type": "fairness_regression",
       "seed": 1029,
-      "modelgate_detected": false,
-      "modelgate_status": "pass",
+      "modelgate_detected": true,
+      "modelgate_status": "fail",
       "baseline_detected": false,
       "champion_acc": 0.9253,
       "candidate_acc": 0.9187

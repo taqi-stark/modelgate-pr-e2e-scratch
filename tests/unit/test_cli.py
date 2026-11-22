@@ -89,6 +89,14 @@ def test_cli_run_success(monkeypatch) -> None:
         lambda *args, **kwargs: dummy_verdict.check_results[1],
     )
     monkeypatch.setattr(
+        "modelgate.checks.leakage.run_leakage_check",
+        lambda *args, **kwargs: CheckResult(name="leakage", status="pass", summary="Passed"),
+    )
+    monkeypatch.setattr(
+        "modelgate.checks.label_shift.run_label_shift_check",
+        lambda *args, **kwargs: CheckResult(name="label_shift", status="pass", summary="Passed"),
+    )
+    monkeypatch.setattr(
         "modelgate.checks.slices.run_slices_check",
         lambda *args, **kwargs: dummy_verdict.check_results[2],
     )

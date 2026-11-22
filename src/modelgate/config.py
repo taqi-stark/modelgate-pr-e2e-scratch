@@ -126,11 +126,34 @@ class FairnessConfig(BaseModel):
     n_bootstrap: int = 200
 
 
+class LeakageConfig(BaseModel):
+    """Target leakage check settings."""
+
+    enabled: bool = True
+    warn_corr: float = 0.50
+    fail_corr: float = 0.75
+    warn_auc: float = 0.85
+    fail_auc: float = 0.92
+
+
+class LabelShiftConfig(BaseModel):
+    """Label-shift check settings."""
+
+    enabled: bool = True
+    by: list[str] = Field(default_factory=lambda: ["region", "gender", "age_bucket"])
+    min_slice_size: int = 30
+    warn_delta: float = 0.05
+    fail_delta: float = 0.10
+    alpha: float = 0.01
+
+
 class ChecksConfig(BaseModel):
     """All check configurations."""
 
     data_contract: DataContractConfig = Field(default_factory=DataContractConfig)
     drift: DriftConfig = Field(default_factory=DriftConfig)
+    leakage: LeakageConfig = Field(default_factory=LeakageConfig)
+    label_shift: LabelShiftConfig = Field(default_factory=LabelShiftConfig)
     slices: SliceConfig = Field(default_factory=SliceConfig)
     behavioral: BehavioralConfig = Field(default_factory=BehavioralConfig)
     budgets: BudgetConfig = Field(default_factory=BudgetConfig)

@@ -24,11 +24,15 @@ from sklearn.preprocessing import OneHotEncoder
 from modelgate.checks.budgets import run_budgets_check
 from modelgate.checks.drift import run_drift_check
 from modelgate.checks.fairness import run_fairness_check
+from modelgate.checks.label_shift import run_label_shift_check
+from modelgate.checks.leakage import run_leakage_check
 from modelgate.checks.slices import run_slices_check
 from modelgate.config import (
     BudgetConfig,
     DriftConfig,
     FairnessConfig,
+    LabelShiftConfig,
+    LeakageConfig,
     SliceConfig,
 )
 from modelgate.verdict import CheckResult, compute_verdict
@@ -237,6 +241,25 @@ def run_single_trial(
         DriftConfig(enabled=True, warn_at=0.1, fail_at=0.25),
     )
     modelgate_results.append(drift_result)
+
+    # Leakage check
+    leakage_result = run_leakage_check(
+        faulty_train,
+        test_eval,
+        "default",
+        LeakageConfig(enabled=True),
+        reference_df=clean_train,
+    )
+    modelgate_results.append(leakage_result)
+
+    # Label-shift check
+    label_shift_result = run_label_shift_check(
+        faulty_train,
+        clean_train,
+        "default",
+        LabelShiftConfig(enabled=True, by=["region", "gender", "age_bucket"]),
+    )
+    modelgate_results.append(label_shift_result)
 
     # Slice check
     slice_result = run_slices_check(

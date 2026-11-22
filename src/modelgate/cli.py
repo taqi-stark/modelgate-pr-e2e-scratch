@@ -73,6 +73,8 @@ def run(
     from modelgate.checks.data_contract import run_data_contract_check
     from modelgate.checks.drift import run_drift_check
     from modelgate.checks.fairness import run_fairness_check
+    from modelgate.checks.label_shift import run_label_shift_check
+    from modelgate.checks.leakage import run_leakage_check
     from modelgate.checks.slices import run_slices_check
     from modelgate.config import load_config
     from modelgate.loader import load_candidate_and_champion
@@ -122,12 +124,33 @@ def run(
         results.append(cr)
         _print_check_result(cr)
 
-    with console.status("[2/6] Drift check..."):
+    with console.status("[2/8] Drift check..."):
         cr = run_drift_check(
             load_result.train_df,
             load_result.reference_df,
             load_result.target_column,
             cfg.checks.drift,
+        )
+        results.append(cr)
+        _print_check_result(cr)
+
+    with console.status("[3/8] Leakage check..."):
+        cr = run_leakage_check(
+            load_result.train_df,
+            load_result.test_df,
+            load_result.target_column,
+            cfg.checks.leakage,
+            reference_df=load_result.reference_df,
+        )
+        results.append(cr)
+        _print_check_result(cr)
+
+    with console.status("[4/8] Label-shift check..."):
+        cr = run_label_shift_check(
+            load_result.train_df,
+            load_result.reference_df,
+            load_result.target_column,
+            cfg.checks.label_shift,
         )
         results.append(cr)
         _print_check_result(cr)
