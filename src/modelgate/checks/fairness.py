@@ -1,9 +1,12 @@
 """Fairness check.
 
-Computes demographic parity difference, equal opportunity difference,
-equalized odds difference, and per-group calibration disparity across
-protected groups, and compares champion vs candidate group gaps using
-a paired bootstrap confidence interval on the change in gap.
+Default gate compares champion vs candidate group gaps using a paired bootstrap
+confidence interval on the change in gap across demographic parity, equal
+opportunity, equalized odds, and per-group calibration disparity.
+Absolute limits are opt-in (enforce_absolute=True) and evaluated relative to
+the champion's own gap when a champion model is present.
+Also computes minimum detectable gap (MDE) at 80% power and emits an
+insufficient-power note when any protected subgroup is small.
 """
 
 from __future__ import annotations
@@ -13,6 +16,7 @@ from typing import Any, Literal
 
 import numpy as np
 import pandas as pd
+from scipy import stats as sp_stats
 
 from modelgate.config import FairnessConfig
 from modelgate.stats import (
@@ -52,6 +56,37 @@ def _compute_gap_suite(
         "equalized_odds_diff": equalized_odds_diff(y_true, y_pred, protected),
         "calibration_gap_diff": calibration_gap_diff(y_true, y_prob, protected),
     }
+
+
+def _compute_min_detectable_gaps(
+    y_true: np.ndarray,
+    protected: np.ndarray,
+    confidence: float = 0.95,
+    power: float = 0.80,
+) -> tuple[int, int, float, float]:
+    """Compute (min_group_n, min_group_positives, mde_dp, mde_eo) at given confidence and power."""
+    groups = np.unique(protected)
+    if len(groups) < 2:
+        return len(y_true), int(np.sum(y_true == 1)), 0.0, 0.0
+
+    group_ns = [int(np.sum(protected == g)) for g in groups]
+    group_pos = [int(np.sum((protected == g) & (y_true == 1))) for g in groups]
+    min_n = min(group_ns)
+    max_n = max(group_ns)
+    min_pos = min(group_pos)
+    max_pos = max(group_pos)
+
+    alpha = 1.0 - confidence
+    z_alpha = float(sp_stats.norm.ppf(1.0 - alpha / 2.0))
+    z_beta = float(sp_stats.norm.ppf(power))
+    z_sum = z_alpha + z_beta
+
+    p_bar = float(np.clip(np.mean(y_true == 1), 0.05, 0.50))
+    var_dp = p_bar * (1.0 - p_bar)
+    mde_dp = float(z_sum * np.sqrt(var_dp * (1.0 / max(min_n, 1) + 1.0 / max(max_n, 1))))
+    # For TPR / equalized odds on positive instances, use worst-case binomial variance 0.25
+    mde_eo = float(z_sum * np.sqrt(0.25 * (1.0 / max(min_pos, 1) + 1.0 / max(max_pos, 1))))
+    return min_n, min_pos, min(mde_dp, 1.0), min(mde_eo, 1.0)
 
 
 def run_fairness_check(
@@ -95,11 +130,15 @@ def run_fairness_check(
 
     group_results: list[dict[str, Any]] = []
     max_metric_value = 0.0
+    max_effective_absolute_excess = 0.0
     max_eqodds_value = 0.0
     max_cal_gap_value = 0.0
     max_gap_delta = 0.0
+    max_mde_dp = 0.0
+    max_mde_eo = 0.0
     bootstrap_fail_reasons: list[str] = []
     bootstrap_warn_reasons: list[str] = []
+    power_notes: list[str] = []
 
     for idx_col, protected_col in enumerate(config.protected):
         if protected_col not in test_df.columns:
@@ -121,6 +160,17 @@ def run_fairness_check(
         max_eqodds_value = max(max_eqodds_value, cand_suite["equalized_odds_diff"])
         max_cal_gap_value = max(max_cal_gap_value, cand_suite["calibration_gap_diff"])
 
+        min_n, min_pos, mde_dp, mde_eo = _compute_min_detectable_gaps(
+            y_test, protected_values, confidence=config.confidence
+        )
+        max_mde_dp = max(max_mde_dp, mde_dp)
+        max_mde_eo = max(max_mde_eo, mde_eo)
+        is_low_power = (
+            min_n < config.min_group_size
+            or min_pos < config.min_group_positives
+            or mde_dp > config.fail_gap_increase
+        )
+
         cand_cal_by_group = {
             row["group"]: row
             for row in per_group_calibration(y_test, candidate_probs, protected_values)
@@ -134,7 +184,6 @@ def run_fairness_check(
             else {}
         )
 
-        # Per-group rates, TPR/FPR, and calibration
         groups = np.unique(protected_values)
         per_group: list[dict[str, Any]] = []
         for g in groups:
@@ -150,6 +199,7 @@ def run_fairness_check(
             group_info: dict[str, Any] = {
                 "group": str(g),
                 "n": n_group,
+                "n_positives": int(np.sum(pos_mask)),
                 "positive_rate": round(pos_rate, 4),
                 "tpr": round(tpr_g, 4),
                 "fpr": round(fpr_g, 4),
@@ -174,16 +224,32 @@ def run_fairness_check(
             "equalized_odds_diff": round(cand_suite["equalized_odds_diff"], 4),
             "calibration_gap_diff": round(cand_suite["calibration_gap_diff"], 4),
             "candidate_gaps": {k: round(v, 4) for k, v in cand_suite.items()},
+            "min_group_n": min_n,
+            "min_group_positives": min_pos,
+            "min_detectable_gap_dp": round(mde_dp, 4),
+            "min_detectable_gap_eo": round(mde_eo, 4),
+            "insufficient_power": is_low_power,
             "per_group": per_group,
         }
+        if is_low_power:
+            note = (
+                f"minimum detectable gap / insufficient power on '{protected_col}': "
+                f"min_group_n={min_n}, min_positives={min_pos}, "
+                f"MDE_DP={mde_dp:.3f}, MDE_EO={mde_eo:.3f} at 80% power"
+            )
+            result_entry["power_note"] = note
+            power_notes.append(note)
 
         if champion_preds is not None and champion_probs is not None:
             champ_suite = _compute_gap_suite(
                 y_test, champion_preds, champion_probs, protected_values
             )
             champion_value = champ_suite.get(config.metric, champ_suite["demographic_parity_diff"])
+            relative_excess = max(0.0, candidate_value - champion_value)
+            max_effective_absolute_excess = max(max_effective_absolute_excess, relative_excess)
             result_entry["champion_value"] = round(champion_value, 4)
             result_entry["delta"] = round(candidate_value - champion_value, 4)
+            result_entry["relative_excess_over_champion"] = round(relative_excess, 4)
             result_entry["champion_gaps"] = {k: round(v, 4) for k, v in champ_suite.items()}
 
             monitored_metrics = list(
@@ -191,6 +257,7 @@ def run_fairness_check(
                     [
                         config.metric,
                         "demographic_parity_diff",
+                        "equal_opportunity_diff",
                         "equalized_odds_diff",
                         "calibration_gap_diff",
                     ]
@@ -234,30 +301,39 @@ def run_fairness_check(
 
             result_entry["gap_bootstrap"] = boot_details[config.metric]
             result_entry["all_gap_bootstraps"] = boot_details
+        else:
+            max_effective_absolute_excess = max(max_effective_absolute_excess, candidate_value)
 
         group_results.append(result_entry)
 
     duration = time.time() - start
 
+    # Default gate when champion is present: paired bootstrap CI on gap change.
+    # Absolute DP limit is opt-in (config.enforce_absolute) and relative to champion's gap when champion is present,
+    # or evaluated on standalone candidate when no champion is provided.
+    check_abs = (champion_model is None) or config.enforce_absolute
     status: Literal["pass", "warn", "fail", "skip"]
-    if max_metric_value >= config.fail_at:
-        status = "fail"
-        summary = f"{config.metric} {max_metric_value:.2f} >= {config.fail_at}"
-    elif bootstrap_fail_reasons:
+    if bootstrap_fail_reasons:
         status = "fail"
         summary = f"Fairness gap regression: {'; '.join(bootstrap_fail_reasons[:2])}"
-    elif max_metric_value >= config.warn_at:
-        status = "warn"
-        summary = f"{config.metric} {max_metric_value:.2f} >= {config.warn_at}"
+    elif check_abs and max_effective_absolute_excess >= config.fail_at:
+        status = "fail"
+        summary = f"{config.metric} {max_effective_absolute_excess:.2f} >= {config.fail_at}"
     elif bootstrap_warn_reasons:
         status = "warn"
         summary = f"Fairness gap increase: {'; '.join(bootstrap_warn_reasons[:2])}"
+    elif check_abs and max_effective_absolute_excess >= config.warn_at:
+        status = "warn"
+        summary = f"{config.metric} {max_effective_absolute_excess:.2f} >= {config.warn_at}"
     else:
         status = "pass"
         summary = (
             f"{config.metric} {max_metric_value:.2f}, "
             f"eq_odds {max_eqodds_value:.2f}, cal_gap {max_cal_gap_value:.2f}"
         )
+
+    if power_notes:
+        summary = f"{summary} [note: {power_notes[0]}]"
 
     return CheckResult(
         name="fairness",
@@ -268,7 +344,14 @@ def run_fairness_check(
             "equalized_odds_diff": max_eqodds_value,
             "calibration_gap_diff": max_cal_gap_value,
             "max_gap_delta": max_gap_delta,
+            "min_detectable_gap_dp": round(max_mde_dp, 4),
+            "min_detectable_gap_eo": round(max_mde_eo, 4),
+            "insufficient_power": 1.0 if power_notes else 0.0,
         },
-        details={"groups": group_results},
+        details={
+            "groups": group_results,
+            "power_notes": power_notes,
+            "enforce_absolute": config.enforce_absolute,
+        },
         duration_s=duration,
     )

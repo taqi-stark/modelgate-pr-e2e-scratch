@@ -471,6 +471,49 @@ def test_fairness_paired_bootstrap_champion_comparison() -> None:
     assert group_detail["all_gap_bootstraps"]["calibration_gap_diff"]["ci_lower"] > 0.10
 
 
+def test_fairness_default_relative_gate_and_power_note() -> None:
+    """Default champion-vs-candidate gate does not fail on pre-existing DP if candidate does not widen it;
+    opt-in enforce_absolute evaluates excess relative to champion's gap; small groups emit MDE/power note.
+    """
+    from modelgate.report import build_html_report, build_pr_comment
+    from modelgate.verdict import compute_verdict
+
+    # Small group dataset: 15 males (all predicted 1), 15 females (all predicted 0) -> DP = 1.0
+    df = pd.DataFrame(
+        {
+            "gender": ["male"] * 15 + ["female"] * 15,
+            "income": [50000.0] * 30,
+            "default": [1, 0, 1, 0, 1] * 6,
+        }
+    )
+
+    class StaticDisparateModel:
+        def predict(self, X: pd.DataFrame) -> np.ndarray:
+            return (X["gender"] == "male").astype(int).values
+
+    # Both champion and candidate have identical DP=1.0 -> Δ_gap = 0.0 -> PASS by default
+    cfg_default = FairnessConfig(
+        enabled=True,
+        protected=["gender"],
+        warn_at=0.05,
+        fail_at=0.10,
+        enforce_absolute=False,
+    )
+    res_pass = run_fairness_check(
+        df, "default", StaticDisparateModel(), StaticDisparateModel(), cfg_default, seed=42
+    )
+    assert res_pass.status == "pass"
+    assert res_pass.metrics["insufficient_power"] == 1.0
+    assert "minimum detectable gap / insufficient power" in res_pass.summary
+    assert len(res_pass.details["power_notes"]) == 1
+
+    verdict = compute_verdict([res_pass])
+    pr_md = build_pr_comment(verdict)
+    html_doc = build_html_report(verdict)
+    assert "minimum detectable gap / insufficient power" in pr_md
+    assert "Statistical Power Notes" in html_doc
+
+
 def test_behavioral_min_functionality(tmp_path: Path) -> None:
     csv_file = tmp_path / "mf.csv"
     csv_file.write_text("income,default,expected\n50000.0,0,0\n60000.0,1,1\n")

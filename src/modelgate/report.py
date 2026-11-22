@@ -78,6 +78,17 @@ def build_pr_comment(
             lines.append(f"{i}. {reason.message}")
         lines.append("")
 
+    # Statistical power / minimum detectable gap notes
+    power_notes: list[str] = []
+    for cr in verdict.check_results:
+        for note in cr.details.get("power_notes", []):
+            power_notes.append(f"[{cr.name}] {note}")
+    if power_notes:
+        lines.append("**Statistical power notes**")
+        for note in power_notes:
+            lines.append(f"- ⚠️ {note}")
+        lines.append("")
+
     # Footer
     links = []
     if run_id:
@@ -178,6 +189,17 @@ def build_html_report(
             )
         reasons_html += "</ol>"
 
+    power_html = ""
+    html_power_notes: list[str] = []
+    for cr in verdict.check_results:
+        for note in cr.details.get("power_notes", []):
+            html_power_notes.append(f"[{cr.name}] {note}")
+    if html_power_notes:
+        power_html = "<h3>Statistical Power Notes</h3><ul>"
+        for note in html_power_notes:
+            power_html += f"<li>{note}</li>"
+        power_html += "</ul>"
+
     lineage_html = ""
     if lineage:
         dvc_row = (
@@ -220,6 +242,7 @@ def build_html_report(
     <p>{verdict.summary}</p>
 
     {reasons_html}
+    {power_html}
 
     <h3>Check Results</h3>
     <table>
