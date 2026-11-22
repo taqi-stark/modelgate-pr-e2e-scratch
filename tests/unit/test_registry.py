@@ -356,4 +356,3 @@ def test_champion_integrity_rejects_tampering_and_unapproved_pr_changes(
             dvc_path=tmp_path / "champion.dvc",
             pinned_sha256=pinned_sha,
         )
-

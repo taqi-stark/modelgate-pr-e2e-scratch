@@ -297,13 +297,18 @@ def test_cli_bench_serve_baseline_and_users(
             "sha256": "abcdef1234567890",
         },
     )
-    assert runner.invoke(app, ["baseline", "verify", "--pinned-sha256", "abcdef1234567890"]).exit_code == 0
+    assert (
+        runner.invoke(app, ["baseline", "verify", "--pinned-sha256", "abcdef1234567890"]).exit_code
+        == 0
+    )
 
     def _fail_verify(**kw: object) -> dict[str, object]:
         raise ValueError("Champion model SHA-256 mismatch")
 
     monkeypatch.setattr("modelgate.registry.verify_champion_integrity", _fail_verify)
-    res_bad_verify = runner.invoke(app, ["baseline", "verify", "--changed-file", "champion/model.pkl"])
+    res_bad_verify = runner.invoke(
+        app, ["baseline", "verify", "--changed-file", "champion/model.pkl"]
+    )
     assert res_bad_verify.exit_code == 1
     assert "verification failed" in res_bad_verify.stdout.lower()
 

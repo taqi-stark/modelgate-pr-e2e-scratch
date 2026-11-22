@@ -29,7 +29,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.12'
           cache: 'pip'
 
       - name: Install ModelGate
@@ -163,20 +163,22 @@ jobs:
           script: |
             const fs = require('fs');
             const verdictPath = 'modelgate_output/verdict.json';
-            if (!fs.existsSync(verdictPath)) {
-              console.log('No verdict file found');
-              return;
+            let state = 'failure';
+            let description = 'Champion integrity check or ModelGate execution failed';
+            if (fs.existsSync(verdictPath)) {
+              const verdict = JSON.parse(fs.readFileSync(verdictPath, 'utf8'));
+              const stateMap = { pass: 'success', warn: 'success', fail: 'failure' };
+              state = stateMap[verdict.status] || 'error';
+              description = (verdict.summary || verdict.status).substring(0, 140);
             }
-            const verdict = JSON.parse(fs.readFileSync(verdictPath, 'utf8'));
-            const stateMap = { pass: 'success', warn: 'success', fail: 'failure' };
 
             try {
               await github.rest.repos.createCommitStatus({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 sha: context.payload.pull_request ? context.payload.pull_request.head.sha : context.sha,
-                state: stateMap[verdict.status] || 'error',
-                description: verdict.summary.substring(0, 140),
+                state,
+                description,
                 context: 'modelgate',
               });
             } catch (err) {
