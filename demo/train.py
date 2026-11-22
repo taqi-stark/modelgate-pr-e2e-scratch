@@ -129,7 +129,7 @@ def build_model(
             (
                 "classifier",
                 GradientBoostingClassifier(
-                    n_estimators=50,
+                    n_estimators=51,
                     max_depth=3,
                     learning_rate=0.1,
                     subsample=0.8,
