@@ -125,6 +125,39 @@ def _train_latency_model(X: pd.DataFrame, y: pd.Series, seed: int) -> Pipeline:
     return pipeline
 
 
+class GroupThresholdModel:
+    """Wrapper that shifts the binary classification threshold for one protected group while keeping predict_proba unchanged."""
+
+    def __init__(
+        self,
+        base_model: Any,
+        protected_col: str,
+        target_group: str,
+        group_threshold: float = 0.25,
+        default_threshold: float = 0.50,
+    ) -> None:
+        self.base_model = base_model
+        self.protected_col = protected_col
+        self.target_group = target_group
+        self.group_threshold = group_threshold
+        self.default_threshold = default_threshold
+
+    def predict_proba(self, X: pd.DataFrame) -> np.ndarray:
+        return self.base_model.predict_proba(X)
+
+    def predict(self, X: pd.DataFrame) -> np.ndarray:
+        probs = self.base_model.predict_proba(X)[:, 1]
+        if self.protected_col in X.columns:
+            thresh = np.where(
+                X[self.protected_col].astype(str).values == self.target_group,
+                self.group_threshold,
+                self.default_threshold,
+            )
+        else:
+            thresh = np.full(len(X), self.default_threshold)
+        return (probs >= thresh).astype(int)
+
+
 FAULT_DESCRIPTIONS = {
     "feature_leakage": "Add a column derived from the target",
     "label_shift": "Corrupt labels in one subgroup of the train set",
@@ -132,6 +165,8 @@ FAULT_DESCRIPTIONS = {
     "schema_drift": "Change a column's scale or unit",
     "latency_regression": "Swap in a much larger model",
     "fairness_regression": "Bias sampling against one protected group",
+    "fairness_threshold_shift": "Shift decision threshold for one protected group (probabilities unchanged)",
+    "fairness_proxy_feature": "Drop protected attribute and bias training via a correlated proxy feature",
     "noop": "Retrain with a different seed (should PASS)",
 }
 
@@ -175,6 +210,17 @@ def inject_fault(
         flip_idx = female_non_default.sample(frac=0.3, random_state=seed).index
         df.loc[flip_idx, "default"] = 1
 
+    elif fault_type == "fairness_threshold_shift":
+        model_override = "group_threshold_shift"
+
+    elif fault_type == "fairness_proxy_feature":
+        is_female = (df["gender"] == "female").astype(float)
+        df["proxy_score"] = is_female * 0.85 + rng.normal(0.0, 0.25, len(df))
+        high_proxy_neg = df[(df["proxy_score"] > 0.6) & (df["default"] == 0)]
+        flip_idx = high_proxy_neg.sample(frac=0.35, random_state=seed).index
+        df.loc[flip_idx, "default"] = 1
+        model_override = "proxy_blind_model"
+
     elif fault_type == "noop":
         pass  # No change, just different seed
 
@@ -207,7 +253,21 @@ def run_single_trial(
 
     cand_seed = seed + 500 if fault_type == "noop" else seed
     if model_override == "large_model":
-        candidate = _train_latency_model(X_faulty, y_faulty, seed=cand_seed)
+        candidate: Any = _train_latency_model(X_faulty, y_faulty, seed=cand_seed)
+    elif model_override == "group_threshold_shift":
+        base_cand = _train_model(X_faulty, y_faulty, seed=cand_seed)
+        candidate = GroupThresholdModel(
+            base_cand,
+            protected_col="gender",
+            target_group="female",
+            group_threshold=0.20,
+            default_threshold=0.50,
+        )
+    elif model_override == "proxy_blind_model":
+        # Drop explicit protected attribute so the model discriminates only through proxy_score
+        X_proxy = X_faulty.copy()
+        X_proxy["gender"] = "redacted"
+        candidate = _train_model(X_proxy, y_faulty, seed=cand_seed)
     else:
         candidate = _train_model(X_faulty, y_faulty, seed=cand_seed)
 
@@ -216,6 +276,10 @@ def run_single_trial(
     if fault_type == "feature_leakage":
         test_rng = np.random.RandomState(seed + 1000)
         test_eval["leaked"] = test_eval["default"] * 0.9 + test_rng.normal(0, 0.1, len(test_eval))
+    elif fault_type == "fairness_proxy_feature":
+        test_rng = np.random.RandomState(seed + 1000)
+        is_female_t = (test_eval["gender"] == "female").astype(float)
+        test_eval["proxy_score"] = is_female_t * 0.85 + test_rng.normal(0.0, 0.25, len(test_eval))
 
     X_test = test_eval.drop(columns=["default"])
     y_test = test_eval["default"]
