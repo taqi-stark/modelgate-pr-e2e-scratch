@@ -500,7 +500,9 @@ def test_leakage_check_pass_and_fail(
     # Inject target-derived column -> fails
     rng = np.random.RandomState(42)
     leaky_train = train_df.copy()
-    leaky_train["leaked_target"] = leaky_train["default"] * 0.9 + rng.normal(0, 0.1, len(leaky_train))
+    leaky_train["leaked_target"] = leaky_train["default"] * 0.9 + rng.normal(
+        0, 0.1, len(leaky_train)
+    )
     res_leaky = run_leakage_check(leaky_train, test_df, "default", cfg, reference_df=ref_df)
     assert res_leaky.status == "fail"
     assert "leaked_target" in res_leaky.summary

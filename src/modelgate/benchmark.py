@@ -490,7 +490,7 @@ def run_benchmark(
 
 
 def _generate_benchmark_markdown(
-    summary: dict,
+    summary: dict[str, dict[str, Any]],
     path: Path,
     commit_hash: str = "unknown",
     seeds: list[int] | None = None,
@@ -498,7 +498,8 @@ def _generate_benchmark_markdown(
 ) -> None:
     """Generate benchmark.md report with exact counts, metadata, and Wilson 95% CIs."""
     if seeds is None:
-        n_default = next(iter(summary.values()), {}).get("n_trials", 30)
+        first_entry: dict[str, Any] = next(iter(summary.values()), {})
+        n_default = int(first_entry.get("n_trials", 30))
         seeds = [1000 + i for i in range(n_default)]
     seed_range_str = f"`{seeds[0]}..{seeds[-1]}` (N={len(seeds)}: `{', '.join(map(str, seeds))}`)"
     noop = summary.get("noop", {})

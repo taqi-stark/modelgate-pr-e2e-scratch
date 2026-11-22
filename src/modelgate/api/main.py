@@ -1,32 +1,42 @@
 """ModelGate FastAPI application.
 
 Provides REST API for run ingestion, querying, comparison, approval,
-and model promotion.
+model promotion, role-based access control, and append-only audit logging.
 """
 
 from __future__ import annotations
 
 import json
+import os
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 from pathlib import Path
 
-from fastapi import Body, FastAPI, HTTPException, Query
+from fastapi import Body, FastAPI, Header, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from sqlmodel import Session, SQLModel, col, create_engine, select
 
-from modelgate.api.models import Approval, CheckResultRecord, Run, Settings
+from modelgate.api.models import Approval, AuditLog, CheckResultRecord, Run, Settings, User
+from modelgate.auth import (
+    VALID_ROLES,
+    authenticate_and_authorize,
+    bootstrap_admin_from_env,
+    create_user,
+    record_audit,
+)
 
-# Database setup
-DATABASE_URL = "sqlite:///modelgate.db"
+# Database setup (configurable via DATABASE_URL environment variable)
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///modelgate.db")
 engine = create_engine(DATABASE_URL, echo=False)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Create database tables on startup."""
+    """Create database tables and bootstrap optional admin user on startup."""
     SQLModel.metadata.create_all(engine)
+    with Session(engine) as session:
+        bootstrap_admin_from_env(session)
     yield
 
 
@@ -38,9 +48,16 @@ app = FastAPI(
 )
 
 # CORS for dashboard
+_cors_origins = [
+    origin.strip()
+    for origin in os.getenv(
+        "MODELGATE_CORS_ORIGINS", "http://localhost:3000,http://localhost:5173"
+    ).split(",")
+    if origin.strip()
+]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=_cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -64,7 +81,7 @@ class RunCreateRequest(BaseModel):
 
 
 class ApprovalRequest(BaseModel):
-    reviewer: str
+    reviewer: str = ""
     decision: str  # "approve" or "reject"
     comment: str
 
@@ -73,40 +90,53 @@ class SettingsUpdateRequest(BaseModel):
     config: dict
 
 
+class UserCreateRequest(BaseModel):
+    name: str
+    role: str
+
+
 # ──── Routes ────
 
 
 @app.post("/runs")
-def create_run(req: RunCreateRequest) -> dict:
-    """Ingest a run result."""
+def create_run(
+    req: RunCreateRequest,
+    authorization: str | None = Header(default=None),
+) -> dict:
+    """Ingest a run result (requires engineer, reviewer, or admin role)."""
     verdict = req.verdict or {}
     metrics: dict[str, float] = {}
 
-    # Extract metrics from check results
     for cr in verdict.get("check_results", []):
         for k, v in cr.get("metrics", {}).items():
             metrics[f"{cr['name']}_{k}"] = v
 
-    run = Run(
-        project=req.project,
-        branch=req.branch,
-        pr_number=req.pr_number,
-        git_sha=req.lineage.get("git_sha", req.git_sha) if req.lineage else req.git_sha,
-        seed=req.lineage.get("seed", req.seed) if req.lineage else req.seed,
-        status=verdict.get("status", ""),
-        summary=verdict.get("summary", ""),
-        verdict_json=json.dumps(verdict),
-        lineage_json=json.dumps(req.lineage or {}),
-        metrics_json=json.dumps(metrics),
-    )
-
     with Session(engine) as session:
+        user = authenticate_and_authorize(
+            session,
+            authorization,
+            allowed_roles=("engineer", "reviewer", "admin"),
+            action="run.create",
+            target=f"project:{req.project or 'default'}",
+        )
+
+        run = Run(
+            project=req.project,
+            branch=req.branch,
+            pr_number=req.pr_number,
+            git_sha=req.lineage.get("git_sha", req.git_sha) if req.lineage else req.git_sha,
+            seed=req.lineage.get("seed", req.seed) if req.lineage else req.seed,
+            status=verdict.get("status", ""),
+            summary=verdict.get("summary", ""),
+            verdict_json=json.dumps(verdict),
+            lineage_json=json.dumps(req.lineage or {}),
+            metrics_json=json.dumps(metrics),
+        )
         session.add(run)
         session.commit()
         session.refresh(run)
         run_id = int(run.id or 0)
 
-        # Save individual check results
         for cr in verdict.get("check_results", []):
             record = CheckResultRecord(
                 run_id=run_id,
@@ -119,6 +149,16 @@ def create_run(req: RunCreateRequest) -> dict:
             )
             session.add(record)
         session.commit()
+
+        record_audit(
+            session,
+            actor=user.name,
+            role=user.role,
+            action="run.create",
+            target=f"run:{run_id}",
+            outcome="allowed",
+            detail={"project": req.project, "status": verdict.get("status", "")},
+        )
 
     return {"id": run_id, "status": verdict.get("status", "")}
 
@@ -169,12 +209,9 @@ def get_run(run_id: int) -> dict:
         if not run:
             raise HTTPException(status_code=404, detail="Run not found")
 
-        # Get check results
         checks = session.exec(
             select(CheckResultRecord).where(CheckResultRecord.run_id == run_id)
         ).all()
-
-        # Get approvals
         approvals = session.exec(select(Approval).where(Approval.run_id == run_id)).all()
 
         return {
@@ -280,16 +317,53 @@ def compare_runs(
 
 @app.post("/runs/{run_id}/approval")
 @app.post("/runs/{run_id}/approve")
-def approve_run(run_id: int, req: ApprovalRequest) -> dict:
-    """Approve or reject a run with a comment."""
+def approve_run(
+    run_id: int,
+    req: ApprovalRequest,
+    authorization: str | None = Header(default=None),
+) -> dict:
+    """Approve or reject a run (requires reviewer or admin; FAIL override requires admin)."""
     with Session(engine) as session:
+        user = authenticate_and_authorize(
+            session,
+            authorization,
+            allowed_roles=("reviewer", "admin"),
+            action="run.approve",
+            target=f"run:{run_id}",
+        )
+
         run = session.get(Run, run_id)
         if not run:
             raise HTTPException(status_code=404, detail="Run not found")
 
         is_override = run.status == "fail" and req.decision == "approve"
+        audit_action = "run.override" if is_override else "run.approve"
+
+        if is_override and user.role != "admin":
+            record_audit(
+                session,
+                actor=user.name,
+                role=user.role,
+                action="run.override",
+                target=f"run:{run_id}",
+                outcome="denied",
+                detail={"status_code": 403, "reason": "override_requires_admin"},
+            )
+            raise HTTPException(
+                status_code=403,
+                detail="Overriding a FAIL run requires 'admin' role",
+            )
 
         if is_override and len(req.comment) < 20:
+            record_audit(
+                session,
+                actor=user.name,
+                role=user.role,
+                action="run.override",
+                target=f"run:{run_id}",
+                outcome="denied",
+                detail={"status_code": 400, "reason": "comment_too_short"},
+            )
             raise HTTPException(
                 status_code=400,
                 detail="Override approval requires a justification of at least 20 characters",
@@ -297,7 +371,7 @@ def approve_run(run_id: int, req: ApprovalRequest) -> dict:
 
         approval = Approval(
             run_id=run_id,
-            reviewer=req.reviewer,
+            reviewer=user.name,
             decision=req.decision,
             comment=req.comment,
             is_override=is_override,
@@ -307,39 +381,83 @@ def approve_run(run_id: int, req: ApprovalRequest) -> dict:
         session.commit()
         session.refresh(approval)
 
+        record_audit(
+            session,
+            actor=user.name,
+            role=user.role,
+            action=audit_action,
+            target=f"run:{run_id}",
+            outcome="allowed",
+            detail={
+                "decision": req.decision,
+                "is_override": is_override,
+                "approval_id": approval.id,
+            },
+        )
+
         return {
             "id": approval.id,
             "run_id": run_id,
+            "reviewer": user.name,
             "decision": req.decision,
             "is_override": is_override,
         }
 
 
 @app.post("/runs/{run_id}/promote")
-def promote_run(run_id: int) -> dict:
-    """Promote a run's model to champion."""
+def promote_run(
+    run_id: int,
+    authorization: str | None = Header(default=None),
+) -> dict:
+    """Promote a run's model to champion (requires admin role)."""
     with Session(engine) as session:
+        user = authenticate_and_authorize(
+            session,
+            authorization,
+            allowed_roles=("admin",),
+            action="run.promote",
+            target=f"run:{run_id}",
+        )
+
         run = session.get(Run, run_id)
         if not run:
             raise HTTPException(status_code=404, detail="Run not found")
 
-        # Check if run can be promoted
         if run.status == "fail":
-            # Check for override approval
             approvals = session.exec(
                 select(Approval)
                 .where(Approval.run_id == run_id)
                 .where(Approval.decision == "approve")
             ).all()
             if not approvals:
+                record_audit(
+                    session,
+                    actor=user.name,
+                    role=user.role,
+                    action="run.promote",
+                    target=f"run:{run_id}",
+                    outcome="denied",
+                    detail={"status_code": 400, "reason": "missing_override_approval"},
+                )
                 raise HTTPException(
                     status_code=400,
                     detail="Cannot promote a FAIL run without override approval",
                 )
 
+        record_audit(
+            session,
+            actor=user.name,
+            role=user.role,
+            action="run.promote",
+            target=f"run:{run_id}",
+            outcome="allowed",
+            detail={"run_status": run.status},
+        )
+
         return {
             "run_id": run_id,
             "promoted": True,
+            "promoted_by": user.name,
             "message": f"Model from run {run_id} promoted to champion",
         }
 
@@ -365,7 +483,7 @@ def list_models(
                 "created_at": r.created_at,
                 "branch": r.branch,
                 "git_sha": r.git_sha,
-                "is_champion": i == 0,  # Latest passing run is champion
+                "is_champion": i == 0,
             }
             for i, r in enumerate(runs)
         ]
@@ -389,10 +507,20 @@ def get_settings(project: str = Query("default")) -> dict:
 
 @app.put("/settings")
 def update_settings(
-    project: str = Query("default"), req: SettingsUpdateRequest = Body(...)
+    project: str = Query("default"),
+    req: SettingsUpdateRequest = Body(...),
+    authorization: str | None = Header(default=None),
 ) -> dict:
-    """Update settings."""
+    """Update settings (requires admin role)."""
     with Session(engine) as session:
+        user = authenticate_and_authorize(
+            session,
+            authorization,
+            allowed_roles=("admin",),
+            action="settings.update",
+            target=f"project:{project}",
+        )
+
         settings = session.exec(select(Settings).where(Settings.project == project)).first()
 
         if settings:
@@ -407,7 +535,113 @@ def update_settings(
 
         session.commit()
 
-        return {"project": project, "status": "saved"}
+        record_audit(
+            session,
+            actor=user.name,
+            role=user.role,
+            action="settings.update",
+            target=f"project:{project}",
+            outcome="allowed",
+            detail={"keys": sorted(req.config.keys())},
+        )
+
+        return {"project": project, "status": "saved", "updated_by": user.name}
+
+
+@app.get("/audit")
+def list_audit_logs(
+    limit: int = Query(100, le=500),
+    offset: int = Query(0),
+    authorization: str | None = Header(default=None),
+) -> list[dict]:
+    """List append-only audit log entries (requires admin role)."""
+    with Session(engine) as session:
+        authenticate_and_authorize(
+            session,
+            authorization,
+            allowed_roles=("admin",),
+            action="audit.read",
+            target="audit_log",
+        )
+        rows = session.exec(
+            select(AuditLog).order_by(col(AuditLog.id).desc()).offset(offset).limit(limit)
+        ).all()
+        return [
+            {
+                "id": r.id,
+                "timestamp": r.timestamp,
+                "actor": r.actor,
+                "role": r.role,
+                "action": r.action,
+                "target": r.target,
+                "outcome": r.outcome,
+                "detail": r.detail,
+            }
+            for r in rows
+        ]
+
+
+@app.post("/users")
+def create_api_user(
+    req: UserCreateRequest,
+    authorization: str | None = Header(default=None),
+) -> dict:
+    """Create an API user with role in (engineer, reviewer, admin) (requires admin role)."""
+    with Session(engine) as session:
+        admin = authenticate_and_authorize(
+            session,
+            authorization,
+            allowed_roles=("admin",),
+            action="user.create",
+            target=f"user:{req.name}",
+        )
+        if req.role not in VALID_ROLES:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid role '{req.role}'. Must be one of {list(VALID_ROLES)}",
+            )
+        user, token = create_user(session, name=req.name, role=req.role)
+        record_audit(
+            session,
+            actor=admin.name,
+            role=admin.role,
+            action="user.create",
+            target=f"user:{user.name}",
+            outcome="allowed",
+            detail={"role": user.role},
+        )
+        return {
+            "id": user.id,
+            "name": user.name,
+            "role": user.role,
+            "token": token,
+            "created_at": user.created_at,
+        }
+
+
+@app.get("/users")
+def list_api_users(
+    authorization: str | None = Header(default=None),
+) -> list[dict]:
+    """List API users without exposing token hashes (requires admin role)."""
+    with Session(engine) as session:
+        authenticate_and_authorize(
+            session,
+            authorization,
+            allowed_roles=("admin",),
+            action="user.list",
+            target="users",
+        )
+        users = session.exec(select(User).order_by(col(User.id).asc())).all()
+        return [
+            {
+                "id": u.id,
+                "name": u.name,
+                "role": u.role,
+                "created_at": u.created_at,
+            }
+            for u in users
+        ]
 
 
 @app.get("/bench")

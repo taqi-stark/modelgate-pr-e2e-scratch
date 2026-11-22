@@ -276,9 +276,14 @@ def run(
 
     # Post to API if running
     try:
+        import os
+
         import httpx
 
-        resp = httpx.post("http://localhost:8000/runs", json=json_payload, timeout=5)
+        api_url = os.getenv("API_URL", "http://localhost:8000").rstrip("/")
+        api_token = os.getenv("MODELGATE_API_TOKEN") or os.getenv("MODELGATE_ADMIN_TOKEN", "")
+        headers = {"Authorization": f"Bearer {api_token}"} if api_token else {}
+        resp = httpx.post(f"{api_url}/runs", json=json_payload, headers=headers, timeout=5)
         if resp.status_code == 200:
             console.print("[dim]Run posted to API[/dim]")
     except Exception:
@@ -482,6 +487,65 @@ def serve(
         port=port,
         reload=True,
     )
+
+
+users_app = typer.Typer(
+    name="users",
+    help="Manage API users and roles (engineer, reviewer, admin).",
+    no_args_is_help=True,
+)
+app.add_typer(users_app, name="users")
+
+
+@users_app.command("add")
+def users_add(
+    name: str = typer.Argument(..., help="Unique username"),
+    role: str = typer.Option("engineer", "--role", "-r", help="Role: engineer, reviewer, or admin"),
+) -> None:
+    """Provision an API user and print the bearer token once."""
+    from sqlmodel import Session, SQLModel
+
+    from modelgate.api.main import engine
+    from modelgate.auth import VALID_ROLES, create_user, record_audit
+
+    if role not in VALID_ROLES:
+        console.print(f"[red]Invalid role '{role}'. Must be one of {list(VALID_ROLES)}[/red]")
+        raise typer.Exit(1)
+
+    SQLModel.metadata.create_all(engine)
+    with Session(engine) as session:
+        user, token = create_user(session, name=name, role=role)
+        record_audit(
+            session,
+            actor="cli",
+            role="admin",
+            action="user.create",
+            target=f"user:{user.name}",
+            outcome="allowed",
+            detail={"role": user.role},
+        )
+        console.print(
+            f"[green]✓ User '{user.name}' ({user.role}) provisioned.[/green]\n"
+            f"Bearer token (save now; only SHA-256 hash is stored):\n{token}"
+        )
+
+
+@users_app.command("list")
+def users_list() -> None:
+    """List provisioned API users and roles."""
+    from sqlmodel import Session, SQLModel, col, select
+
+    from modelgate.api.main import engine
+    from modelgate.api.models import User
+
+    SQLModel.metadata.create_all(engine)
+    with Session(engine) as session:
+        rows = session.exec(select(User).order_by(col(User.id).asc())).all()
+        if not rows:
+            console.print("[dim]No users provisioned.[/dim]")
+            return
+        for u in rows:
+            console.print(f"  {u.id}: [bold]{u.name}[/bold] ({u.role}) — created {u.created_at}")
 
 
 def _print_check_result(cr: CheckResult) -> None:

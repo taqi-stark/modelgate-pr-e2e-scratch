@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { api } from '../api';
+import { api, getApiToken, setApiToken } from '../api';
 
 export default function SettingsPage() {
   const [settings, setSettings] = useState<any>(null);
   const [editing, setEditing] = useState(false);
   const [editText, setEditText] = useState('');
+  const [apiToken, setApiTokenState] = useState(() => getApiToken());
   const [loading, setLoading] = useState(true);
   const [saved, setSaved] = useState(false);
 
@@ -39,6 +40,23 @@ export default function SettingsPage() {
           ✓ Settings saved successfully
         </div>
       )}
+
+      <div className="card">
+        <div className="card-title">API Authentication (Bearer Token)</div>
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 8 }}>
+          <input
+            type="password"
+            className="filter-input"
+            placeholder="Paste engineer / reviewer / admin bearer token"
+            value={apiToken}
+            onChange={e => {
+              setApiTokenState(e.target.value);
+              setApiToken(e.target.value);
+            }}
+            style={{ width: '100%' }}
+          />
+        </div>
+      </div>
 
       <div className="card">
         <div className="card-title">Thresholds & Budgets</div>

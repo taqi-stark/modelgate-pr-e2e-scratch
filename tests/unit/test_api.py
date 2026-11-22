@@ -4,16 +4,20 @@ from __future__ import annotations
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlmodel import SQLModel
+from sqlmodel import Session, SQLModel
 
 from modelgate.api.main import app, engine
+from modelgate.auth import create_user
 
 
 @pytest.fixture(name="client")
 def client_fixture() -> TestClient:
     SQLModel.metadata.drop_all(engine)
     SQLModel.metadata.create_all(engine)
+    with Session(engine) as session:
+        _, token = create_user(session, name="test_admin", role="admin")
     with TestClient(app) as client:
+        client.headers["Authorization"] = f"Bearer {token}"
         yield client
 
 

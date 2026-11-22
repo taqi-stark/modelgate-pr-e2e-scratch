@@ -75,3 +75,34 @@ class Settings(SQLModel, table=True):
     project: str = Field(unique=True, default="")
     config_json: str = "{}"
     updated_at: str = Field(default_factory=lambda: datetime.now(UTC).isoformat())
+
+
+class User(SQLModel, table=True):
+    """Authenticated API user with role-based permissions (engineer, reviewer, admin)."""
+
+    __tablename__ = "users"
+
+    id: int | None = Field(default=None, primary_key=True)
+    name: str = Field(unique=True, index=True, default="")
+    role: str = ""  # "engineer", "reviewer", or "admin"
+    token_hash: str = Field(unique=True, index=True, default="")
+    created_at: str = Field(default_factory=lambda: datetime.now(UTC).isoformat())
+
+
+class AuditLog(SQLModel, table=True):
+    """Append-only audit log of allowed and denied API actions."""
+
+    __tablename__ = "audit_log"
+
+    id: int | None = Field(default=None, primary_key=True)
+    timestamp: str = Field(default_factory=lambda: datetime.now(UTC).isoformat())
+    actor: str = "anonymous"
+    role: str = ""
+    action: str = ""
+    target: str = ""
+    outcome: str = ""  # "allowed" or "denied"
+    detail_json: str = "{}"
+
+    @property
+    def detail(self) -> dict:
+        return json.loads(self.detail_json) if self.detail_json else {}

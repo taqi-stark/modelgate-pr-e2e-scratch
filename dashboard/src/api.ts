@@ -63,10 +63,32 @@ export interface Model {
   is_champion: boolean;
 }
 
+const TOKEN_STORAGE_KEY = 'modelgate_api_token';
+
+export function getApiToken(): string {
+  return localStorage.getItem(TOKEN_STORAGE_KEY) || '';
+}
+
+export function setApiToken(token: string): void {
+  if (token.trim()) {
+    localStorage.setItem(TOKEN_STORAGE_KEY, token.trim());
+  } else {
+    localStorage.removeItem(TOKEN_STORAGE_KEY);
+  }
+}
+
 async function fetchJSON<T>(path: string, options?: RequestInit): Promise<T> {
+  const token = getApiToken();
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...((options?.headers as Record<string, string>) || {}),
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
   const resp = await fetch(`${API_BASE}${path}`, {
-    headers: { 'Content-Type': 'application/json' },
     ...options,
+    headers,
   });
   if (!resp.ok) {
     const err = await resp.json().catch(() => ({ detail: resp.statusText }));
