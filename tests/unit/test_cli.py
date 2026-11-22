@@ -288,6 +288,25 @@ def test_cli_bench_serve_baseline_and_users(
     )
     assert runner.invoke(app, ["baseline", "import"]).exit_code == 0
 
+    # baseline verify (valid and tampered)
+    monkeypatch.setattr(
+        "modelgate.registry.verify_champion_integrity",
+        lambda **kw: {
+            "verified": True,
+            "baseline_dir": str(kw.get("baseline_dir", "champion")),
+            "sha256": "abcdef1234567890",
+        },
+    )
+    assert runner.invoke(app, ["baseline", "verify", "--pinned-sha256", "abcdef1234567890"]).exit_code == 0
+
+    def _fail_verify(**kw: object) -> dict[str, object]:
+        raise ValueError("Champion model SHA-256 mismatch")
+
+    monkeypatch.setattr("modelgate.registry.verify_champion_integrity", _fail_verify)
+    res_bad_verify = runner.invoke(app, ["baseline", "verify", "--changed-file", "champion/model.pkl"])
+    assert res_bad_verify.exit_code == 1
+    assert "verification failed" in res_bad_verify.stdout.lower()
+
     # users add / list
     assert runner.invoke(app, ["users", "add", "bad_user", "--role", "superadmin"]).exit_code == 1
     assert runner.invoke(app, ["users", "add", "cli_eng", "--role", "engineer"]).exit_code == 0

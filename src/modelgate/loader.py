@@ -245,10 +245,18 @@ def load_candidate_and_champion(
         is_first_run = True
 
     if champion_model is None:
-        baseline_model_path = (
-            Path(getattr(config.champion, "baseline_dir", "champion")) / "model.pkl"
-        )
+        baseline_dir = Path(getattr(config.champion, "baseline_dir", "champion"))
+        baseline_model_path = baseline_dir / "model.pkl"
         if baseline_model_path.exists():
+            dvc_candidate = baseline_dir.parent / f"{baseline_dir.name}.dvc"
+            if (
+                (baseline_dir / "metadata.json").exists()
+                or dvc_candidate.exists()
+                or os.environ.get("CHAMPION_PINNED_SHA256", "").strip()
+            ):
+                from modelgate.registry import verify_champion_integrity
+
+                verify_champion_integrity(baseline_dir=baseline_dir)
             try:
                 import pickle
 

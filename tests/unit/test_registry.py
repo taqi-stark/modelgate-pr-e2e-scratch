@@ -42,6 +42,7 @@ from modelgate.registry import (
     import_champion_baseline,
     log_run_to_mlflow,
     promote_to_champion,
+    verify_champion_integrity,
 )
 from modelgate.verdict import CheckResult, Verdict
 
@@ -278,3 +279,81 @@ def test_github_pr_bot(monkeypatch: pytest.MonkeyPatch) -> None:
     # Set commit status
     assert set_commit_status("org/repo", "sha1", "success", "all good", token="tok") is True
     mock_commit.create_status.assert_called_once()
+
+
+def test_champion_integrity_rejects_tampering_and_unapproved_pr_changes(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Tampered champion model/manifest or unapproved PR edits to champion/ must be rejected."""
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.delenv("ALLOW_CHAMPION_UPDATE", raising=False)
+    monkeypatch.delenv("CHAMPION_PINNED_SHA256", raising=False)
+
+    cfg = _make_tiny_project(tmp_path)
+    champ_dir = tmp_path / "champion"
+    exp_res = export_champion_baseline(cfg, baseline_dir=champ_dir)
+    pinned_sha = exp_res["metadata"]["model_sha256"]
+
+    # 1. Valid unmodified champion passes verification with base-branch pinned SHA
+    ok = verify_champion_integrity(
+        baseline_dir=champ_dir,
+        dvc_path=tmp_path / "champion.dvc",
+        pinned_sha256=pinned_sha,
+        changed_files=["demo/train.py"],
+    )
+    assert ok["verified"] is True
+    assert ok["sha256"] == pinned_sha
+
+    # 2. Unapproved PR modifying champion/ or champion.dvc is rejected
+    with pytest.raises(ValueError, match="Unapproved modification of champion baseline"):
+        verify_champion_integrity(
+            baseline_dir=champ_dir,
+            dvc_path=tmp_path / "champion.dvc",
+            pinned_sha256=pinned_sha,
+            changed_files=["champion/model.pkl"],
+        )
+
+    with pytest.raises(ValueError, match="Unapproved modification of champion baseline"):
+        verify_champion_integrity(
+            baseline_dir=champ_dir,
+            dvc_path=tmp_path / "champion.dvc",
+            pinned_sha256=pinned_sha,
+            changed_files=["champion.dvc"],
+        )
+
+    # 3. Approved PR modification (CODEOWNERS / allow_champion_update=True) is permitted
+    ok_approved = verify_champion_integrity(
+        baseline_dir=champ_dir,
+        dvc_path=tmp_path / "champion.dvc",
+        pinned_sha256=pinned_sha,
+        changed_files=["champion/model.pkl", "champion.dvc"],
+        allow_champion_update=True,
+    )
+    assert ok_approved["verified"] is True
+
+    # 4. Tampering with champion/model.pkl bytes is rejected by verify, import, and loader
+    orig_bytes = (champ_dir / "model.pkl").read_bytes()
+    (champ_dir / "model.pkl").write_bytes(orig_bytes + b"TAMPERED")
+    with pytest.raises(ValueError, match="SHA-256 mismatch against metadata.json"):
+        verify_champion_integrity(baseline_dir=champ_dir, pinned_sha256=pinned_sha)
+    with pytest.raises(ValueError, match="SHA-256 mismatch"):
+        import_champion_baseline(cfg, baseline_dir=champ_dir, pinned_sha256=pinned_sha)
+    with pytest.raises(ValueError, match="SHA-256 mismatch"):
+        load_candidate_and_champion(cfg)
+
+    # 5. Even if an attacker rewrites BOTH model.pkl AND metadata.json + champion.dvc,
+    #    mismatch against base-branch pinned_sha256 still rejects the tampered champion!
+    tampered_sha = compute_file_hash(champ_dir / "model.pkl")
+    meta = json.loads((champ_dir / "metadata.json").read_text())
+    meta["model_sha256"] = tampered_sha
+    (champ_dir / "metadata.json").write_text(json.dumps(meta))
+    dvc_text = (tmp_path / "champion.dvc").read_text().replace(pinned_sha, tampered_sha)
+    (tmp_path / "champion.dvc").write_text(dvc_text)
+
+    with pytest.raises(ValueError, match="SHA-256 mismatch against pinned base-branch value"):
+        verify_champion_integrity(
+            baseline_dir=champ_dir,
+            dvc_path=tmp_path / "champion.dvc",
+            pinned_sha256=pinned_sha,
+        )
+

@@ -277,7 +277,7 @@ def export_champion_baseline(
     (out_dir / "metrics.json").write_text(json.dumps(metrics, indent=2) + "\n")
 
     # Write deterministic champion.dvc pointer file
-    dvc_file = Path(f"{out_dir.name}.dvc")
+    dvc_file = out_dir.parent / f"{out_dir.name}.dvc"
     dvc_content = (
         f"outs:\n"
         f"- md5: {model_md5}\n"
@@ -295,15 +295,116 @@ def export_champion_baseline(
     }
 
 
+def verify_champion_integrity(
+    baseline_dir: str | os.PathLike[str] = "champion",
+    dvc_path: str | os.PathLike[str] | None = None,
+    pinned_sha256: str = "",
+    changed_files: list[str] | None = None,
+    allow_champion_update: bool = False,
+) -> dict[str, Any]:
+    """Verify champion baseline integrity against metadata.json, champion.dvc, and a pinned SHA-256.
+
+    Also rejects unapproved PR modifications touching champion/ or champion.dvc unless
+    allow_champion_update is True (or ALLOW_CHAMPION_UPDATE=true in the environment).
+    """
+    from pathlib import Path
+
+    import yaml
+
+    from modelgate.loader import compute_file_hash
+
+    in_dir = Path(baseline_dir)
+    dvc_file = Path(dvc_path) if dvc_path is not None else (in_dir.parent / f"{in_dir.name}.dvc")
+
+    env_allow = os.environ.get("ALLOW_CHAMPION_UPDATE", "").strip().lower() in (
+        "1",
+        "true",
+        "yes",
+    )
+    effective_allow = allow_champion_update or env_allow
+
+    if changed_files:
+        prefix = f"{in_dir.name}/"
+        dvc_name = dvc_file.name
+        touched = [
+            f
+            for f in changed_files
+            if f == in_dir.name
+            or f.startswith(prefix)
+            or f == dvc_name
+            or f.endswith(f"/{dvc_name}")
+        ]
+        if touched and not effective_allow:
+            raise ValueError(
+                f"Unapproved modification of champion baseline in PR ({', '.join(touched)}). "
+                "CODEOWNERS approval is required to modify champion/ or champion.dvc."
+            )
+
+    model_path = in_dir / "model.pkl"
+    meta_path = in_dir / "metadata.json"
+
+    if not model_path.exists():
+        raise FileNotFoundError(f"Champion baseline model not found: {model_path}")
+
+    actual_sha = compute_file_hash(model_path)
+    pinned = (pinned_sha256 or os.environ.get("CHAMPION_PINNED_SHA256", "")).strip()
+
+    checked_any = False
+
+    if meta_path.exists():
+        metadata = json.loads(meta_path.read_text())
+        expected_meta_sha = str(metadata.get("model_sha256", "")).strip()
+        if not expected_meta_sha or expected_meta_sha != actual_sha:
+            raise ValueError(
+                f"Champion model SHA-256 mismatch against metadata.json: "
+                f"expected {expected_meta_sha or '<missing>'}, got {actual_sha}"
+            )
+        checked_any = True
+
+    if dvc_file.exists():
+        dvc_data = yaml.safe_load(dvc_file.read_text()) or {}
+        outs = dvc_data.get("outs", [])
+        expected_dvc_sha = str(outs[0].get("sha256", "")).strip() if outs else ""
+        if expected_dvc_sha and expected_dvc_sha != actual_sha:
+            raise ValueError(
+                f"Champion model SHA-256 mismatch against {dvc_file.name}: "
+                f"expected {expected_dvc_sha}, got {actual_sha}"
+            )
+        if expected_dvc_sha:
+            checked_any = True
+
+    if pinned:
+        if pinned != actual_sha:
+            raise ValueError(
+                f"Champion model SHA-256 mismatch against pinned base-branch value: "
+                f"expected {pinned}, got {actual_sha}"
+            )
+        checked_any = True
+
+    if not checked_any:
+        raise ValueError(
+            f"Cannot verify champion integrity for {model_path}: "
+            "no metadata.json, champion.dvc sha256, or pinned_sha256 provided."
+        )
+
+    return {
+        "verified": True,
+        "baseline_dir": str(in_dir),
+        "model_path": str(model_path),
+        "sha256": actual_sha,
+        "pinned_sha256": pinned or actual_sha,
+    }
+
+
 def import_champion_baseline(
     config: Any,
     baseline_dir: str | os.PathLike[str] | None = None,
+    pinned_sha256: str = "",
 ) -> dict[str, Any]:
     """Import a persisted champion baseline from champion/ into MLflow and set the @champion alias."""
     import pickle
     from pathlib import Path
 
-    from modelgate.loader import compute_file_hash
     from modelgate.verdict import CheckResult, Verdict
 
     in_dir = Path(str(baseline_dir or getattr(config.champion, "baseline_dir", "champion")))
@@ -314,19 +415,18 @@ def import_champion_baseline(
     if not model_path.exists():
         raise FileNotFoundError(f"Champion baseline model not found: {model_path}")
 
+    verify_res = verify_champion_integrity(
+        baseline_dir=in_dir,
+        pinned_sha256=pinned_sha256,
+    )
+    actual_sha = str(verify_res["sha256"])
+
     metadata: dict[str, Any] = (
         json.loads(meta_path.read_text()) if meta_path.exists() else {"project": config.project}
     )
     metrics: dict[str, float] = (
         json.loads(metrics_path.read_text()) if metrics_path.exists() else {}
     )
-
-    expected_sha = metadata.get("model_sha256", "")
-    actual_sha = compute_file_hash(model_path)
-    if expected_sha and expected_sha != actual_sha:
-        raise ValueError(
-            f"Champion model SHA-256 mismatch: expected {expected_sha}, got {actual_sha}"
-        )
 
     from modelgate.loader import import_entrypoint, load_data
 

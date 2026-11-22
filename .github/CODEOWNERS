@@ -1,0 +1,3 @@
+# Champion baseline artifacts require explicit approval from ModelGate admins / ML reviewers
+/champion/ @modelgate-admins @ml-reviewers
+/champion.dvc @modelgate-admins @ml-reviewers

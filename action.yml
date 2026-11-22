@@ -19,6 +19,18 @@ inputs:
     description: 'Directory containing persisted champion baseline (model.pkl, metadata.json, metrics.json)'
     required: false
     default: 'champion'
+  base-ref:
+    description: 'Base branch ref to load and pin the trusted champion baseline from on PRs'
+    required: false
+    default: ''
+  pinned-sha256:
+    description: 'Optional explicit pinned SHA-256 of champion/model.pkl (auto-read from base branch when omitted)'
+    required: false
+    default: ''
+  allow-champion-update:
+    description: 'Set to true only when a PR modifying champion/ has CODEOWNERS approval'
+    required: false
+    default: 'false'
   setup-data:
     description: 'Command to prepare data on a clean checkout when data/train.csv is absent (e.g. dvc pull or python demo/train.py)'
     required: false
@@ -56,8 +68,10 @@ runs:
         python -m pip install --upgrade pip
         pip install -e .
 
-    - name: Prepare Data & Import Champion Baseline
+    - name: Prepare Data, Verify Integrity & Import Champion Baseline
       shell: bash
+      env:
+        ALLOW_CHAMPION_UPDATE: ${{ inputs.allow-champion-update }}
       run: |
         if [ ! -f "data/train.csv" ]; then
           if [ -s ".dvc/config" ] && command -v dvc >/dev/null 2>&1; then
@@ -66,8 +80,51 @@ runs:
             ${{ inputs.setup-data }}
           fi
         fi
-        if [ -f "${{ inputs.baseline-dir }}/model.pkl" ]; then
-          modelgate baseline import --config "${{ inputs.config }}" --dir "${{ inputs.baseline-dir }}"
+
+        BASE_REF="${{ inputs.base-ref || github.base_ref }}"
+        BASE_DIR="${{ inputs.baseline-dir }}"
+        DVC_FILE="${BASE_DIR}.dvc"
+        PINNED_SHA="${{ inputs.pinned-sha256 }}"
+        CHANGED_ARGS=()
+
+        if [ -n "$BASE_REF" ] && git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+          git fetch origin "${BASE_REF}" || true
+          if git rev-parse --verify "origin/${BASE_REF}" >/dev/null 2>&1; then
+            mapfile -t CHANGED_FILES < <(git diff --name-only "origin/${BASE_REF}...HEAD")
+            for f in "${CHANGED_FILES[@]}"; do
+              if [ -n "$f" ]; then
+                CHANGED_ARGS+=(--changed-file "$f")
+              fi
+            done
+
+            if [ -z "$PINNED_SHA" ]; then
+              PINNED_SHA=$(git show "origin/${BASE_REF}:${DVC_FILE}" 2>/dev/null | python -c "import sys, yaml; d = yaml.safe_load(sys.stdin) or {}; print((d.get('outs') or [{}])[0].get('sha256', ''))" || true)
+            fi
+            if [ -z "$PINNED_SHA" ]; then
+              PINNED_SHA=$(git show "origin/${BASE_REF}:${BASE_DIR}/metadata.json" 2>/dev/null | python -c "import sys, json; print(json.load(sys.stdin).get('model_sha256', ''))" || true)
+            fi
+
+            if git cat-file -e "origin/${BASE_REF}:${BASE_DIR}/model.pkl" 2>/dev/null; then
+              git checkout "origin/${BASE_REF}" -- "${BASE_DIR}" "${DVC_FILE}" 2>/dev/null || git checkout "origin/${BASE_REF}" -- "${BASE_DIR}"
+            fi
+          fi
+        fi
+
+        if [ -f "${BASE_DIR}/model.pkl" ]; then
+          VERIFY_ARGS=(--dir "${BASE_DIR}")
+          if [ -f "${DVC_FILE}" ]; then
+            VERIFY_ARGS+=(--dvc "${DVC_FILE}")
+          fi
+          if [ -n "$PINNED_SHA" ]; then
+            VERIFY_ARGS+=(--pinned-sha256 "$PINNED_SHA")
+          fi
+          modelgate baseline verify "${VERIFY_ARGS[@]}" "${CHANGED_ARGS[@]}"
+
+          IMPORT_ARGS=(--config "${{ inputs.config }}" --dir "${BASE_DIR}")
+          if [ -n "$PINNED_SHA" ]; then
+            IMPORT_ARGS+=(--pinned-sha256 "$PINNED_SHA")
+          fi
+          modelgate baseline import "${IMPORT_ARGS[@]}"
         fi
 
     - name: Run Quality Gate Checks

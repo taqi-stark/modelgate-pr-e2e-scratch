@@ -537,6 +537,11 @@ def baseline_export(
 def baseline_import(
     config: str = typer.Option("modelgate.yaml", "--config", "-c", help="Config file path"),
     dir_path: str = typer.Option("champion", "--dir", "-d", help="Champion baseline directory"),
+    pinned_sha256: str = typer.Option(
+        "",
+        "--pinned-sha256",
+        help="Optional base-branch SHA-256 to verify champion/model.pkl against",
+    ),
 ) -> None:
     """Import champion model, metadata, and metrics from champion/ into MLflow registry."""
     from modelgate.config import load_config
@@ -544,7 +549,10 @@ def baseline_import(
 
     try:
         cfg = load_config(config)
-        res = import_champion_baseline(cfg, baseline_dir=dir_path)
+        if pinned_sha256:
+            res = import_champion_baseline(cfg, baseline_dir=dir_path, pinned_sha256=pinned_sha256)
+        else:
+            res = import_champion_baseline(cfg, baseline_dir=dir_path)
         console.print(
             f"[green]✓ Imported champion baseline from {res['baseline_dir']}/[/green]\n"
             f"  MLflow run: {res['run_id']}  Promoted to @{cfg.champion.mlflow_alias}: {res['promoted']}\n"
@@ -552,6 +560,48 @@ def baseline_import(
         )
     except Exception as e:
         console.print(f"[red]Failed to import champion baseline:[/red] {e}")
+        raise typer.Exit(1)
+
+
+@baseline_app.command("verify")
+def baseline_verify(
+    dir_path: str = typer.Option("champion", "--dir", "-d", help="Champion baseline directory"),
+    dvc_path: str | None = typer.Option(
+        None, "--dvc", help="Optional path to champion.dvc manifest"
+    ),
+    pinned_sha256: str = typer.Option(
+        "",
+        "--pinned-sha256",
+        help="Pinned SHA-256 hash from the base branch to verify against",
+    ),
+    changed_file: list[str] | None = typer.Option(
+        None,
+        "--changed-file",
+        help="File paths modified in the PR (repeatable); fails if champion/ is modified without approval",
+    ),
+    allow_champion_update: bool = typer.Option(
+        False,
+        "--allow-champion-update",
+        help="Allow PR modifications to champion/ (set only after CODEOWNERS approval)",
+    ),
+) -> None:
+    """Verify champion baseline SHA-256 integrity and enforce PR modification guard."""
+    from modelgate.registry import verify_champion_integrity
+
+    try:
+        res = verify_champion_integrity(
+            baseline_dir=dir_path,
+            dvc_path=dvc_path,
+            pinned_sha256=pinned_sha256,
+            changed_files=changed_file or None,
+            allow_champion_update=allow_champion_update,
+        )
+        console.print(
+            f"[green]✓ Champion baseline verified ({res['baseline_dir']}/)[/green]\n"
+            f"  SHA-256: {res['sha256']}"
+        )
+    except Exception as e:
+        console.print(f"[red]Champion integrity verification failed:[/red] {e}")
         raise typer.Exit(1)
 
 
