@@ -9,67 +9,35 @@
 
 ---
 
-## Visual Previews
+## Real Output & Dashboard
 
-### 1. GitHub PR Comment Bot
-When a PR is opened, ModelGate executes the quality gate and posts a comprehensive status report directly onto the pull request:
+### 1. GitHub PR Comment Bot (`modelgate_output/pr_comment.md`)
+When executed on a pull request, `modelgate run` writes `modelgate_output/pr_comment.md` (via `build_pr_comment` in `src/modelgate/report.py`):
 
 ```markdown
-### 🛡️ ModelGate Quality Gate Verdict: ❌ FAIL
+## ModelGate verdict: PASS
 
-> **Summary:** Candidate model failed 2 of 6 checks (slice regression detected in 'North' region, p95 latency budget exceeded).
+**Candidate** `30405b4` | seed 42 | data `43737ff0...`
 
-| Check | Status | Value / Score | Threshold | Details |
-| :--- | :---: | :---: | :---: | :--- |
-| **Data Contract** | ✅ PASS | Valid | Strict | Pandera schema validation succeeded |
-| **Feature Drift** | ✅ PASS | Max PSI: 0.042 | Warn ≥ 0.10, Fail ≥ 0.25 | No significant distribution shift |
-| **Slice Regression** | ❌ FAIL | ΔF1: -0.068 (p=0.002) | Max drop: 0.030 (95% CI) | Severe degradation in slice `region=North` |
-| **Behavioral Tests** | ✅ PASS | 0.0% flip rate | Max flip: 0.0% | Invariance tests passed |
-| **Performance Budgets**| ❌ FAIL | p95: 58.9 ms | Max p95: 10.0 ms | 48.9 ms above latency limit |
-| **Fairness** | ⚠️ WARN | DP Diff: 0.062 | Warn ≥ 0.05, Fail ≥ 0.10 | Disparity observed for `gender` |
-
-<details>
-<summary><b>🔍 How to Reproduce Locally</b></summary>
-
-```bash
-git checkout feature/update-credit-risk-model
-dvc checkout data.dvc
-modelgate reproduce --run-id 09b01094598a448781657d622a4e64a0
-```
-</details>
+| Check | Status | Summary |
+|---|---|---|
+| Data Contract | ✅ PASS | 0 violations |
+| Drift | ✅ PASS | Max PSI 0.02, no significant drift |
+| Slices | ✅ PASS | No slice regression detected (overall f1: 0.879) |
+| Behavioral | ✅ PASS | flip rate 0.0% |
+| Budgets | ✅ PASS | p95 21.5ms, size 0.1MB, mem 0.1MB |
+| Fairness | ✅ PASS | demographic_parity_diff 0.00 |
 ```
 
 ---
 
-### 2. Interactive React Dashboard (`http://localhost:3000`)
-The web dashboard provides interactive exploration of evaluation runs, champion-challenger comparisons, and drift distributions:
-
-```
-┌────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│  MODELGATE DASHBOARD                     [ Runs ]   [ Models ]   [ Compare ]   [ Benchmark ]   [ Settings ]│
-├────────────────────────────────────────────────────────────────────────────────────────────────────────┤
-│  RUN #09b01094   •   credit-risk-gate   •   Commit: 8946af2   •   Status: ❌ REJECTED                      │
-├────────────────────────────────────────────────────────────────────────────────────────────────────────┤
-│  OVERVIEW CARDS                                                                                        │
-│  ┌───────────────────────┐  ┌───────────────────────┐  ┌───────────────────────┐  ┌──────────────────┐ │
-│  │ Champion Accuracy     │  │ Candidate Accuracy    │  │ Slices Analyzed       │  │ Gate Verdict     │ │
-│  │ 90.9% (GBM baseline)  │  │ 91.5% (+0.6% overall) │  │ 6 Subgroups (F1)      │  │ ❌ FAIL (Blocked)│ │
-│  └───────────────────────┘  └───────────────────────┘  └───────────────────────┘  └──────────────────┘ │
-│                                                                                                        │
-│  PER-SLICE REGRESSION BREAKDOWN (Paired Bootstrap, B=500, α=0.05)                                      │
-│  Slice                Champion F1   Candidate F1   Difference (Δ)   p-value   Holm-Bonf.   Status      │
-│  ──────────────────   ───────────   ────────────   ──────────────   ───────   ──────────   ─────────   │
-│  region = North              0.88           0.81           -0.070    0.0020       Yes      ❌ FAIL     │
-│  region = South              0.91           0.92           +0.010    0.4120       No       ✅ PASS     │
-│  gender = female             0.89           0.89            0.000    0.8500       No       ✅ PASS     │
-│  age_bucket = senior         0.85           0.86           +0.010    0.3200       No       ✅ PASS     │
-│                                                                                                        │
-│  LATENCY & RESOURCE BUDGETS                                                                            │
-│  • Single-Row Prediction Latency:  p50 = 30.9 ms  |  p95 = 58.9 ms (Budget: 10.0 ms)  ❌ EXCEEDED     │
-│  • Serialized Artifact Size:       2.4 MB (Budget: 50.0 MB)                           ✅ OK           │
-│  • Peak Inference Memory:          14.2 MB (Budget: 500.0 MB)                         ✅ OK           │
-└────────────────────────────────────────────────────────────────────────────────────────────────────────┘
-```
+### 2. React Dashboard (`http://localhost:3000`)
+The Vite + React dashboard (`dashboard/src/`) queries the FastAPI backend (`http://localhost:8000`) and exposes five views:
+- **Runs (`/`) & Run Detail (`/runs/:id`)**: Run list with status/branch filtering, per-check verdicts, slice bootstrap CI breakdown, and run approval controls.
+- **Models (`/models`)**: Registered model runs and active champion indicator.
+- **Compare (`/compare`)**: Side-by-side metric comparison (`GET /compare?a=<id>&b=<id>`).
+- **Benchmark (`/benchmark`)**: Fault-injection benchmark summary loaded from `GET /bench`.
+- **Settings (`/settings`)**: Project configuration and API token settings.
 
 ---
 
