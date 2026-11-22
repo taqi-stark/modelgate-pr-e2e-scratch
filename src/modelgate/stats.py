@@ -353,4 +353,189 @@ def equal_opportunity_diff(
             continue
         tpr_rates.append(float(np.mean(y_pred[mask])))
 
-    return max(tpr_rates) - min(tpr_rates) if tpr_rates else 0.0
+    return max(tpr_rates) - min(tpr_rates) if len(tpr_rates) >= 2 else 0.0
+
+
+def equalized_odds_diff(
+    y_true: NDArray[np.int_],
+    y_pred: NDArray[np.int_],
+    protected: NDArray[np.object_],
+) -> float:
+    """Compute equalized odds difference across protected groups.
+
+    Defined as max(max_g TPR_g - min_g TPR_g, max_g FPR_g - min_g FPR_g).
+
+    Args:
+        y_true: True binary labels (0 or 1).
+        y_pred: Predicted binary labels (0 or 1).
+        protected: Protected group labels.
+
+    Returns:
+        Equalized odds difference in [0, 1].
+    """
+    groups = np.unique(protected)
+    if len(groups) < 2:
+        return 0.0
+
+    tpr_rates: list[float] = []
+    fpr_rates: list[float] = []
+    for g in groups:
+        pos_mask = (protected == g) & (y_true == 1)
+        neg_mask = (protected == g) & (y_true == 0)
+        if np.sum(pos_mask) > 0:
+            tpr_rates.append(float(np.mean(y_pred[pos_mask])))
+        if np.sum(neg_mask) > 0:
+            fpr_rates.append(float(np.mean(y_pred[neg_mask])))
+
+    tpr_gap = (max(tpr_rates) - min(tpr_rates)) if len(tpr_rates) >= 2 else 0.0
+    fpr_gap = (max(fpr_rates) - min(fpr_rates)) if len(fpr_rates) >= 2 else 0.0
+    return float(max(tpr_gap, fpr_gap))
+
+
+def per_group_calibration(
+    y_true: NDArray[np.int_],
+    y_prob: NDArray[np.float64],
+    protected: NDArray[np.object_],
+) -> list[dict[str, Any]]:
+    """Compute per-group calibration metrics (mean predicted probability, base rate, calibration error, Brier score)."""
+    groups = np.unique(protected)
+    y_true_f = np.asarray(y_true, dtype=np.float64)
+    y_prob_f = np.asarray(y_prob, dtype=np.float64)
+    results: list[dict[str, Any]] = []
+    for g in groups:
+        mask = protected == g
+        n_g = int(np.sum(mask))
+        if n_g == 0:
+            continue
+        mean_prob = float(np.mean(y_prob_f[mask]))
+        base_rate = float(np.mean(y_true_f[mask]))
+        cal_err = abs(mean_prob - base_rate)
+        brier = float(np.mean((y_prob_f[mask] - y_true_f[mask]) ** 2))
+        results.append(
+            {
+                "group": str(g),
+                "n": n_g,
+                "mean_pred_prob": round(mean_prob, 4),
+                "base_rate": round(base_rate, 4),
+                "calibration_error": round(cal_err, 4),
+                "brier_score": round(brier, 4),
+            }
+        )
+    return results
+
+
+def calibration_gap_diff(
+    y_true: NDArray[np.int_],
+    y_prob: NDArray[np.float64],
+    protected: NDArray[np.object_],
+) -> float:
+    """Compute the maximum difference in group calibration error |E[p_hat|G=g] - E[Y|G=g]| across protected groups."""
+    groups = np.unique(protected)
+    if len(groups) < 2:
+        return 0.0
+
+    y_true_f = np.asarray(y_true, dtype=np.float64)
+    y_prob_f = np.asarray(y_prob, dtype=np.float64)
+    errors: list[float] = []
+    for g in groups:
+        mask = protected == g
+        if np.sum(mask) == 0:
+            continue
+        errors.append(abs(float(np.mean(y_prob_f[mask]) - np.mean(y_true_f[mask]))))
+
+    return float(max(errors) - min(errors)) if len(errors) >= 2 else 0.0
+
+
+def paired_bootstrap_gap_ci(
+    y_true: NDArray[np.int_],
+    champ_scores: NDArray[Any],
+    cand_scores: NDArray[Any],
+    protected: NDArray[np.object_],
+    metric: str = "demographic_parity_diff",
+    n_bootstrap: int = 200,
+    confidence: float = 0.95,
+    seed: int = 42,
+) -> BootstrapResult:
+    """Compute a paired bootstrap CI on the change in group fairness gap: gap(candidate) - gap(champion).
+
+    A positive point_estimate / ci_lower > 0 means the candidate model has a larger (worse)
+    between-group disparity than the champion model on the same resampled test rows.
+    """
+    y_arr = np.asarray(y_true, dtype=np.float64)
+    a_arr = np.asarray(champ_scores, dtype=np.float64)
+    b_arr = np.asarray(cand_scores, dtype=np.float64)
+    prot_arr = np.asarray(protected)
+    n = len(y_arr)
+    groups = np.unique(prot_arr)
+    if n == 0 or len(groups) < 2:
+        return BootstrapResult(0.0, 0.0, 0.0, n_bootstrap, confidence, 1.0)
+
+    def _point_gap(scores: NDArray[np.float64]) -> float:
+        if metric == "demographic_parity_diff":
+            return demographic_parity_diff(scores.astype(int), prot_arr)
+        if metric == "equal_opportunity_diff":
+            return equal_opportunity_diff(y_arr.astype(int), scores.astype(int), prot_arr)
+        if metric == "equalized_odds_diff":
+            return equalized_odds_diff(y_arr.astype(int), scores.astype(int), prot_arr)
+        if metric == "calibration_gap_diff":
+            return calibration_gap_diff(y_arr.astype(int), scores, prot_arr)
+        return demographic_parity_diff(scores.astype(int), prot_arr)
+
+    point_estimate = float(_point_gap(b_arr) - _point_gap(a_arr))
+
+    rng = np.random.RandomState(seed)
+    idx = rng.randint(0, n, size=(n_bootstrap, n))
+    y_boot = y_arr[idx]
+    a_boot = a_arr[idx]
+    b_boot = b_arr[idx]
+    g_Masks = [(prot_arr == g)[idx].astype(np.float64) for g in groups]
+
+    def _boot_gaps(scores_boot: NDArray[np.float64]) -> NDArray[np.float64]:
+        if metric in ("demographic_parity_diff", "calibration_gap_diff"):
+            vals = scores_boot - y_boot if metric == "calibration_gap_diff" else scores_boot
+            rates = []
+            for m in g_Masks:
+                denom = np.maximum(np.sum(m, axis=1), 1e-12)
+                r = np.sum(m * vals, axis=1) / denom
+                if metric == "calibration_gap_diff":
+                    r = np.abs(r)
+                rates.append(r)
+            stacked = np.vstack(rates)
+            return np.max(stacked, axis=0) - np.min(stacked, axis=0)
+
+        # equal_opportunity_diff or equalized_odds_diff
+        tprs = []
+        fprs = []
+        for m in g_Masks:
+            pos_m = m * (y_boot == 1.0)
+            pos_denom = np.maximum(np.sum(pos_m, axis=1), 1e-12)
+            tprs.append(np.sum(pos_m * scores_boot, axis=1) / pos_denom)
+            if metric == "equalized_odds_diff":
+                neg_m = m * (y_boot == 0.0)
+                neg_denom = np.maximum(np.sum(neg_m, axis=1), 1e-12)
+                fprs.append(np.sum(neg_m * scores_boot, axis=1) / neg_denom)
+        tpr_stack = np.vstack(tprs)
+        tpr_gap = np.max(tpr_stack, axis=0) - np.min(tpr_stack, axis=0)
+        if metric == "equal_opportunity_diff":
+            return tpr_gap
+        fpr_stack = np.vstack(fprs)
+        fpr_gap = np.max(fpr_stack, axis=0) - np.min(fpr_stack, axis=0)
+        return np.maximum(tpr_gap, fpr_gap)
+
+    gap_a = _boot_gaps(a_boot)
+    gap_b = _boot_gaps(b_boot)
+    diffs = gap_b - gap_a
+
+    alpha = 1.0 - confidence
+    ci_lower = float(np.percentile(diffs, 100 * alpha / 2))
+    ci_upper = float(np.percentile(diffs, 100 * (1 - alpha / 2)))
+    p_value = float(np.mean(diffs <= 0))
+
+    return BootstrapResult(
+        point_estimate=point_estimate,
+        ci_lower=ci_lower,
+        ci_upper=ci_upper,
+        n_bootstrap=n_bootstrap,
+        confidence=confidence,
+        p_value=p_value,
+    )

@@ -425,6 +425,48 @@ def test_fairness_equal_opportunity(
     assert res_disabled.status == "skip"
 
 
+def test_fairness_paired_bootstrap_champion_comparison() -> None:
+    """Champion vs candidate paired bootstrap CI flags candidate that widens calibration/parity gap."""
+    rng = np.random.RandomState(123)
+    n = 300
+    df = pd.DataFrame(
+        {
+            "gender": ["male"] * (n // 2) + ["female"] * (n // 2),
+            "income": rng.uniform(20000, 100000, n),
+            "default": rng.binomial(1, 0.1, size=n),
+        }
+    )
+
+    class FairChampion:
+        def predict(self, X: pd.DataFrame) -> np.ndarray:
+            return np.zeros(len(X), dtype=int)
+
+        def predict_proba(self, X: pd.DataFrame) -> np.ndarray:
+            return np.column_stack([np.full(len(X), 0.9), np.full(len(X), 0.1)])
+
+    class MisCalibratedCandidate:
+        def predict(self, X: pd.DataFrame) -> np.ndarray:
+            return np.zeros(len(X), dtype=int)
+
+        def predict_proba(self, X: pd.DataFrame) -> np.ndarray:
+            p1 = np.where(X["gender"] == "female", 0.38, 0.10)
+            return np.column_stack([1.0 - p1, p1])
+
+    cfg = FairnessConfig(
+        enabled=True,
+        protected=["gender"],
+        metric="demographic_parity_diff",
+        warn_at=0.05,
+        fail_at=0.10,
+    )
+    res = run_fairness_check(df, "default", MisCalibratedCandidate(), FairChampion(), cfg, seed=42)
+    assert res.status == "fail"
+    assert "calibration_gap_diff" in res.summary
+    group_detail = res.details["groups"][0]
+    assert "all_gap_bootstraps" in group_detail
+    assert group_detail["all_gap_bootstraps"]["calibration_gap_diff"]["ci_lower"] > 0.10
+
+
 def test_behavioral_min_functionality(tmp_path: Path) -> None:
     csv_file = tmp_path / "mf.csv"
     csv_file.write_text("income,default,expected\n50000.0,0,0\n60000.0,1,1\n")

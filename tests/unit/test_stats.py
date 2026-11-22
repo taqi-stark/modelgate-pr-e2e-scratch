@@ -11,13 +11,17 @@ from hypothesis import strategies as st
 
 from modelgate.stats import (
     BootstrapResult,
+    calibration_gap_diff,
     compute_psi,
     compute_psi_categorical,
     demographic_parity_diff,
     equal_opportunity_diff,
+    equalized_odds_diff,
     holm_bonferroni,
     ks_test,
     paired_bootstrap_ci,
+    paired_bootstrap_gap_ci,
+    per_group_calibration,
 )
 
 # ──────────────────────────────────────────────────
@@ -285,3 +289,51 @@ class TestEqualOpportunityDiff:
         eod = equal_opportunity_diff(y_true, y_pred, protected)
 
         assert eod == 0.5  # Group a: 1.0, Group b: 0.5
+
+
+class TestEqualizedOddsAndCalibration:
+    """Tests for equalized_odds_diff, calibration_gap_diff, per_group_calibration, and paired_bootstrap_gap_ci."""
+
+    def test_equalized_odds_captures_fpr_disparity(self) -> None:
+        """Equalized odds detects FPR disparity even when TPR is equal."""
+        y_true = np.array([1, 1, 0, 0, 1, 1, 0, 0])
+        # Group a: TPR=1.0, FPR=1.0; Group b: TPR=1.0, FPR=0.0
+        y_pred = np.array([1, 1, 1, 1, 1, 1, 0, 0])
+        protected = np.array(["a", "a", "a", "a", "b", "b", "b", "b"])
+
+        assert equal_opportunity_diff(y_true, y_pred, protected) == 0.0
+        assert equalized_odds_diff(y_true, y_pred, protected) == 1.0
+
+    def test_per_group_calibration_and_gap(self) -> None:
+        """Per-group calibration computes calibration error and between-group gap."""
+        y_true = np.array([0, 0, 0, 0, 0, 0, 0, 0])
+        # Group a well-calibrated (0.0), Group b over-predicted by 0.4
+        y_prob = np.array([0.0, 0.0, 0.0, 0.0, 0.4, 0.4, 0.4, 0.4])
+        protected = np.array(["a", "a", "a", "a", "b", "b", "b", "b"])
+
+        rows = per_group_calibration(y_true, y_prob, protected)
+        assert len(rows) == 2
+        gap = calibration_gap_diff(y_true, y_prob, protected)
+        assert abs(gap - 0.4) < 1e-6
+
+    def test_paired_bootstrap_gap_ci_detects_gap_increase(self) -> None:
+        """Paired bootstrap gap CI detects when candidate widens group disparity over champion."""
+        rng = np.random.RandomState(42)
+        n = 400
+        protected = np.array(["male"] * (n // 2) + ["female"] * (n // 2))
+        y_true = rng.binomial(1, 0.1, size=n)
+        champ_prob = np.full(n, 0.1)
+        cand_prob = np.where(protected == "female", 0.35, 0.1)
+
+        boot = paired_bootstrap_gap_ci(
+            y_true,
+            champ_prob,
+            cand_prob,
+            protected,
+            metric="calibration_gap_diff",
+            n_bootstrap=200,
+            seed=42,
+        )
+        assert boot.point_estimate > 0.2
+        assert boot.ci_lower > 0.15
+        assert boot.p_value == 0.0

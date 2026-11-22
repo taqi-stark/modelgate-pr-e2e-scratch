@@ -120,6 +120,10 @@ class FairnessConfig(BaseModel):
     metric: str = "demographic_parity_diff"
     warn_at: float = 0.05
     fail_at: float = 0.10
+    max_gap_increase: float = 0.02
+    fail_gap_increase: float = 0.05
+    confidence: float = 0.95
+    n_bootstrap: int = 200
 
 
 class ChecksConfig(BaseModel):
