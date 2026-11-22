@@ -116,12 +116,13 @@ behavioral:
     - feature: "income"
       direction: "increasing"
 
-# Resource and latency budgets
+# Resource and latency budgets (interleaved champion vs candidate ratio gate; absolute ms optional)
 budgets:
   enabled: true
-  p95_latency_ms: 15.0
-  max_memory_mb: 512.0
-  max_model_size_mb: 100.0
+  max_latency_ratio: 1.5
+  # p95_latency_ms: 100.0     # optional absolute ceiling in ms
+  max_peak_mem_mb: 500.0
+  max_model_mb: 50.0
 
 # Target leakage detection
 leakage:
@@ -140,15 +141,18 @@ label_shift:
   fail_delta: 0.10
   alpha: 0.01
 
-# Algorithmic fairness (demographic parity, equalized odds, per-group calibration & paired bootstrap gap CI)
+# Algorithmic fairness (champion-vs-candidate paired bootstrap gap CI default; absolute DP opt-in relative to champion)
 fairness:
   enabled: true
   protected: ["gender"]
   metric: "demographic_parity_diff"
+  enforce_absolute: false
   warn_at: 0.05
   fail_at: 0.10
   max_gap_increase: 0.02
   fail_gap_increase: 0.05
+  min_group_size: 100
+  min_group_positives: 30
   confidence: 0.95
   n_bootstrap: 200
 ```

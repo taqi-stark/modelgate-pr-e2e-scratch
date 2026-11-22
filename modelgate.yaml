@@ -48,7 +48,9 @@ checks:
         expect: prob_not_increase
   budgets:
     enabled: true
-    p95_latency_ms: 100
+    max_latency_ratio: 1.5
+    # Optional absolute ceiling (ms); ratio gate against champion runs by default:
+    # p95_latency_ms: 100
     max_model_mb: 50
     max_peak_mem_mb: 500
   fairness:

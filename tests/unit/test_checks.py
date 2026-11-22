@@ -268,11 +268,50 @@ def test_budgets_check_fail_latency() -> None:
             time.sleep(0.005)
             return np.array([0])
 
-    # Unrealistic 0.0001 ms budget to force fail
+    # Optional absolute ms ceiling enforced when explicitly set
     cfg = BudgetConfig(enabled=True, p95_latency_ms=0.0001)
     res = run_budgets_check(df, "default", SlowModel(), None, cfg)
     assert res.status == "fail"
     assert "p95" in res.summary
+
+    # When p95_latency_ms is None (default) and no champion is present, absolute ms does not fail
+    cfg_opt = BudgetConfig(enabled=True, p95_latency_ms=None)
+    res_opt = run_budgets_check(df, "default", SlowModel(), None, cfg_opt)
+    assert res_opt.status == "pass"
+
+
+def test_budgets_check_ratio_gate_same_job() -> None:
+    """Champion and candidate measured interleaved in the same job and gated on p95 ratio."""
+    df = pd.DataFrame({"income": [50000.0], "default": [0]})
+
+    class FastModel:
+        def predict(self, X: pd.DataFrame) -> np.ndarray:
+            import time
+
+            time.sleep(0.0005)
+            return np.array([0])
+
+    class SlowerModel:
+        def predict(self, X: pd.DataFrame) -> np.ndarray:
+            import time
+
+            time.sleep(0.0025)
+            return np.array([0])
+
+    # Ratio ~5x > 1.5x must FAIL even with no absolute p95_latency_ms set
+    cfg = BudgetConfig(enabled=True, max_latency_ratio=1.5, p95_latency_ms=None)
+    res_fail = run_budgets_check(df, "default", SlowerModel(), FastModel(), cfg)
+    assert res_fail.status == "fail"
+    assert "latency ratio" in res_fail.summary
+    assert res_fail.metrics["latency_ratio"] > 1.5
+    assert "champion_p95_ms" in res_fail.metrics
+
+    # Similar speed models (~1.0x <= 2.0x) PASS
+    cfg_pass = BudgetConfig(enabled=True, max_latency_ratio=2.0, p95_latency_ms=None)
+    res_pass = run_budgets_check(df, "default", FastModel(), FastModel(), cfg_pass)
+    assert res_pass.status == "pass"
+    assert "vs champion" in res_pass.summary
+    assert res_pass.metrics["latency_ratio"] <= 2.0
 
 
 class BigPicklableModel:

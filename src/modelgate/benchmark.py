@@ -361,14 +361,14 @@ def run_single_trial(
     )
     modelgate_results.append(fairness_result)
 
-    # Budgets check
-    if fault_type == "latency_regression":
+    # Budgets check (paired latency ratio gate in the same job; absolute ms optional)
+    if fault_type in ("latency_regression", "noop"):
         budget_result = run_budgets_check(
             test_eval,
             "default",
             candidate,
             champion,
-            BudgetConfig(enabled=True, p95_latency_ms=10.0),
+            BudgetConfig(enabled=True, max_latency_ratio=1.5, p95_latency_ms=None),
         )
         modelgate_results.append(budget_result)
 

@@ -709,7 +709,9 @@ checks:
     invariance: []
     directional: []
   budgets:
-    p95_latency_ms: 25
+    max_latency_ratio: 1.5
+    # Optional absolute ms ceiling:
+    # p95_latency_ms: 25
     max_model_mb: 50
     max_peak_mem_mb: 500
   fairness:

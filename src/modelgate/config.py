@@ -108,7 +108,8 @@ class BudgetConfig(BaseModel):
     """Performance budget check settings."""
 
     enabled: bool = True
-    p95_latency_ms: float = 25.0
+    max_latency_ratio: float | None = 1.5
+    p95_latency_ms: float | None = None
     max_model_mb: float = 50.0
     max_peak_mem_mb: float = 500.0
 
